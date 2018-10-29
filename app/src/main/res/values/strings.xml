@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Timesheet management</string>
+    <string name="message_write_error">Error Writing Message ! \n</string>
+    <string name="message_write_success">Successfully written to Tag !</string>
+    <string name="message_write_progress">Writing to Tag..</string>
+    <string name="message_tag_detected">NFC Tag Detected !</string>
+    <string name="message_read_tag">Check current NFC Tag</string>
+    <string name="message_write_tag">Register a NFC Tag</string>
+    <string name="message_tap_tag">Tap the NFC Tag to your device !</string>
+    <string name="hint_message">Employee\'s full name</string>
+    <string name="hint_email">Employee\'s email</string>
+    <string name="empty_tag">Tag is empty</string>
+
+    <string name="sign_out">Sign Out</string>
+    <string name="image_button_label">Take a photo</string>
+
+    <string name="email_address">sedghi.h@gmail.com</string>
+    <string name="email_pass">Mmalek123</string>
+    <string name="email_title">Employee tag registration</string>
+
+
+    //// launcher activity
+    <string name="message_management_tag">manage tags</string>
+    <string name="message_timesheet_tag">timesheets</string>
+    <string name="message_report_tag">Create report</string>
+    <string name="title_activity_tag_reader">TagReaderActivity</string>
+    <string name="title_activity_report">ReportActivity</string>
+</resources>

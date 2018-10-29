@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "953912352015",
+    "firebase_url": "https://timesheet-management-acbbd.firebaseio.com",
+    "project_id": "timesheet-management-acbbd",
+    "storage_bucket": "timesheet-management-acbbd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:953912352015:android:a1eef4c46b300c49",
+        "android_client_info": {
+          "package_name": "com.timesheet.management.nfc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "953912352015-clbh6ovalpts3f75l6u7i6fuaqaiakj1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.timesheet.management.nfc",
+            "certificate_hash": "82702942dc3bfd6e9e19935c4ea033d034a9c223"
+          }
+        },
+        {
+          "client_id": "953912352015-npa7po85bhnih6qfgre0ok8gl3oe2rnd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDW2JhwowLF_FSA-UijS9vjMt1-5B9-B_E"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "953912352015-npa7po85bhnih6qfgre0ok8gl3oe2rnd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
