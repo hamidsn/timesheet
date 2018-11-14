@@ -1,41 +1,27 @@
-package com.tag.management.nfc.model;
+package com.tag.management.nfc.database;
 
-import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
 @Entity(tableName = "employee")
-public class Employee {
+public class EmployeeEntry {
 
-   // @PrimaryKey(autoGenerate = true)
-   // private int id;
-
-    @ColumnInfo(name = "employer_name")
+    //@PrimaryKey(autoGenerate = true)
     private String employerName;
-
-   // @ColumnInfo(name = "employee_full_name")
     private String employeeFullName;
-
-    @ColumnInfo(name = "employer_uid")
     private String employerUid;
-
-    @ColumnInfo(name = "employee_download_url")
     private String employeeDownloadUrl;
-
-    @ColumnInfo(name = "employee_email")
     private String employeeEmail;
-
-    @ColumnInfo(name = "employee_available")
     private boolean employeeAvailable;
 
     @PrimaryKey
     @NonNull
     private String employeeUniqueId;
 
-    //@Ignore
-    public Employee(String employerName, String employeeFullName, String employerUid, String downloadUrl, String employeeEmail, String employeeUniqueId, boolean employeeAvailable) {
+    @Ignore
+    public EmployeeEntry(String employerName, String employeeFullName, String employerUid, String downloadUrl, String employeeEmail, String employeeUniqueId, boolean employeeAvailable) {
         this.employerName = employerName;
         this.employeeFullName = employeeFullName;
         this.employerUid = employerUid;
@@ -45,18 +31,26 @@ public class Employee {
         this.employeeAvailable = employeeAvailable;
     }
 
-    @Ignore
-    public Employee(String employerName, String employeeFullName, String employerUid, String downloadUrl, String employeeEmail, String employeeUniqueId) {
+    public EmployeeEntry() {
+    }
+/*
+    public EmployeeEntry(int id, String employerName, String employeeFullName, String employerUid, String downloadUrl, String employeeEmail, String employeeUniqueId) {
         this.employerName = employerName;
         this.employeeFullName = employeeFullName;
         this.employerUid = employerUid;
         this.employeeDownloadUrl = downloadUrl;
         this.employeeEmail = employeeEmail;
         this.employeeUniqueId = employeeUniqueId;
+        this.id = id;
+    }*/
+
+/*    public int getId() {
+        return id;
     }
 
-    public Employee() {
-    }
+    public void setId(int id) {
+        this.id = id;
+    }*/
 
     public String getEmployerName() {
         return employerName;

@@ -268,26 +268,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     }
 
     private void captureImage() {
-        /*Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        // Ensure that there's a camera activity to handle the intent
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            // Create the File where the photo should go
-            File photoFile = null;
-            try {
-                photoFile = createImageFile();
-            } catch (IOException ex) {
-                // Error occurred while creating the File
-            ///...
-            }
-            // Continue only if the File was successfully created
-            if (photoFile != null) {
-                photoURI = FileProvider.getUriForFile(this,
-                        "com.timesheet.management.nfc.fileprovider",
-                        photoFile);
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                startActivityForResult(takePictureIntent, RC_PHOTO_PICKER);
-            }
-        }*/
+
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
@@ -308,22 +289,6 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
 
         }
     }
-/*
-    private File createImageFile() throws IOException {
-        // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-                imageFileName,  *//* prefix *//*
-                ".jpg",         *//* suffix *//*
-                storageDir      *//* directory *//*
-        );
-
-        // Save a file: path for use with ACTION_VIEW intents
-        mCurrentPhotoPath = image.getAbsolutePath();
-        return image;
-    }*/
 
     private void initNFC() {
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
@@ -481,7 +446,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
 
 
                     if (mNfcWriteFragment.onNfcDetected(tag, ndefMessage, emailAddress, messageToWrite, employerName)) {
-                        // write was successful, add employee to DB
+                        // write was successful, add employee to fb DB
                         Employee employee = new Employee(employerName, messageToWrite, employerUid, (Uri.EMPTY.equals(downloadUrl) || downloadUrl == null) ? "-" : downloadUrl.toString(), emailAddress, employeeTimeStamp);
                         mMessagesDatabaseReference.push().setValue(employee);
                     }

@@ -86,7 +86,7 @@ public class TimesheetUtil {
         }
     }
 
-    private static String getCurrentTimeUsingCalendar() {
+    public static String getCurrentTimeUsingCalendar() {
         Calendar cal = Calendar.getInstance();
         Date date = cal.getTime();
         DateFormat dateFormat = new SimpleDateFormat(PATTERN_CURRENT);
