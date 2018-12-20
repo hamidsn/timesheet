@@ -61,7 +61,7 @@ public class TimesheetUtil {
 
         if(items.length == 3) {
             /*todo if sign in or sign out*/
-            tagMessage = (true ? HELLO : BYE) + newLine + items[1] + newLine + newLine + getCurrentTimeUsingCalendar();
+            tagMessage = (true ? HELLO : BYE) + newLine + items[0] + newLine + newLine + getCurrentTimeUsingCalendar();
 
         } else {
             tagMessage = "not a valid tag for this app. It contains :" + newLine + items[0];
@@ -73,6 +73,16 @@ public class TimesheetUtil {
         String tagMessage;
         String[] items = message.toString().split(newLine);
         return items[1];
+    }
+
+    public static String getStaffName(String message) {
+        String[] items = message.toString().split(newLine);
+        return items[0];
+    }
+
+    public static String getStaffUniqueId(String message) {
+        String[] items = message.toString().split(newLine);
+        return items[2];
     }
 
     private static String getActualTime(String s) {

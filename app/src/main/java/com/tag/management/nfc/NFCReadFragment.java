@@ -22,7 +22,8 @@ public class NFCReadFragment extends DialogFragment {
 
     public static final String TAG = NFCReadFragment.class.getSimpleName();
     private TextView mTvMessage;
-    private Listener mListener;
+    private Listener fragmentDisplayedListener;
+    private StaffListener staffNameListener;
 
     public static NFCReadFragment newInstance() {
 
@@ -47,18 +48,19 @@ public class NFCReadFragment extends DialogFragment {
     public void onAttach(Context context) {
         super.onAttach(context);
         if (context instanceof TagManagementActivity) {
-            mListener = (TagManagementActivity) context;
+            fragmentDisplayedListener = (TagManagementActivity) context;
         } else {
-            mListener = (TagReaderActivity) context;
+            fragmentDisplayedListener = (TagReaderActivity) context;
+            staffNameListener = (TagReaderActivity) context;
         }
 
-        mListener.onDialogDisplayed();
+        fragmentDisplayedListener.onDialogDisplayed();
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener.onDialogDismissed();
+        fragmentDisplayedListener.onDialogDismissed();
     }
 
     public void onNfcDetectedManager(Ndef ndef) {
@@ -87,13 +89,36 @@ public class NFCReadFragment extends DialogFragment {
         }
     }
 
+    public String returnStaffName(Ndef ndef) {
+        String staffName = "";
+        try {
+            String message = getNdefMessage(ndef);
+            if (!TextUtils.isEmpty(message)) {
+                Log.d(TAG, "readFromNFCManager: " + message);
+                staffName = TimesheetUtil.getStaffName(EncodeMorseManager.getEncodedString(message));
+            }
+            return (staffName);
+
+        } catch (IOException | FormatException e) {
+            e.printStackTrace();
+            return (staffName);
+        }
+    }
+
     private void readFromNFCStaff(Ndef ndef) {
         try {
             String message = getNdefMessage(ndef);
 
             if (!TextUtils.isEmpty(message)) {
+                message = EncodeMorseManager.getEncodedString(message);
                 Log.d(TAG, "readFromNFCManager: " + message);
-                mTvMessage.setText(TimesheetUtil.parseNFCMessageStaff(EncodeMorseManager.getEncodedString(message)));
+                String name = TimesheetUtil.getStaffName(message);
+                String uId = TimesheetUtil.getStaffUniqueId(message);
+                String employer = TimesheetUtil.getEmployer(message);
+
+                mTvMessage.setText(TimesheetUtil.parseNFCMessageStaff(message));
+
+                staffNameListener.onStaffDetails(name, uId, employer);
             } else {
                 mTvMessage.setText(R.string.empty_tag);
             }
@@ -104,7 +129,7 @@ public class NFCReadFragment extends DialogFragment {
     }
 
     private String getNdefMessage(Ndef ndef) throws IOException, FormatException {
-        NdefMessage ndefMessage = null;
+        NdefMessage ndefMessage;
         String message = "";
         if (ndef != null) {
             ndef.connect();

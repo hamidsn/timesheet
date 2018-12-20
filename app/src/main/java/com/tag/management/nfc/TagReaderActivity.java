@@ -48,7 +48,7 @@ import io.fabric.sdk.android.Fabric;
 
 import static android.support.v7.widget.DividerItemDecoration.VERTICAL;
 
-public class TagReaderActivity extends AppCompatActivity implements Listener, EmployeeAdapter.ItemClickListener{
+public class TagReaderActivity extends AppCompatActivity implements Listener, StaffListener,  EmployeeAdapter.ItemClickListener{
 
     private static final String ANONYMOUS = "anonymous";
     private static final int RC_SIGN_IN = 1;
@@ -153,19 +153,24 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, Em
         Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
 
         if (tag != null) {
-            Toast.makeText(this, getString(R.string.message_tag_detected), Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, getString(R.string.message_tag_detected), Toast.LENGTH_SHORT).show();
 
             if (isDialogDisplayed) {
                     myTrace.incrementCounter(READ_FROM_NFC);
                     mNfcReadFragment = (NFCReadFragment) getFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
                     Ndef ndef = Ndef.get(tag);
 
+                    String employeeUniqueId = mNfcReadFragment.returnStaffName(ndef);
                     tagEmployer = mNfcReadFragment.returnEmployerName(ndef);
                     if(appEmployer.toLowerCase().equals(tagEmployer.toLowerCase())){
                         mNfcReadFragment.onNfcDetectedStaff(ndef);
+
+
+
                     } else {
                         Toast.makeText(this, "Sorry, this tag is for " + (tagEmployer.length()>1 ? tagEmployer : "another business") + ". We work for " + appEmployer, Toast.LENGTH_LONG).show();
                     }
+                    //todo check if employeeUniqueId is in Room then set its availability to true
                 }
         }
     }
@@ -321,5 +326,28 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, Em
     public void onItemClickListener(String itemId) {
         // Launch AddTaskActivity adding the itemId as an extra in the intent
         //todo, change manual
+    }
+
+    @Override
+    public void onStaffDetails(String name, String uId, String employer) {
+        Log.d("TAG", name);
+        //todo can we only update availability flag
+        final EmployeeEntry employeeIndividual = new EmployeeEntry(employer, name, "employee.getEmployerUid()", "employee.getEmployeeDownloadUrl()", "employee.getEmployeeEmail()", uId, true);
+        //mDb.employeeDao().updateEmployee(employeeIndividual);
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+
+                mDb.employeeDao().updateEmployee(employeeIndividual);
+            }
+        });
+
+
+        Employee newEmployee = new Employee();
+        newEmployee.setEmployeeFullName(name);
+        newEmployee.setEmployeeUniqueId(uId);
+        newEmployee.setEmployeeAvailable(true);
+
+        //todo get name of staff and add/remove in db
     }
 }
