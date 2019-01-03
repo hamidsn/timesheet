@@ -14,6 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.tag.management.nfc.database.AppDatabase;
+import com.tag.management.nfc.engine.AppExecutors;
 import com.tag.management.nfc.engine.EncodeMorseManager;
 
 import java.io.IOException;
@@ -24,6 +26,7 @@ public class NFCReadFragment extends DialogFragment {
     private TextView mTvMessage;
     private Listener fragmentDisplayedListener;
     private StaffListener staffNameListener;
+    private AppDatabase employeeListDb;
 
     public static NFCReadFragment newInstance() {
 
@@ -35,6 +38,7 @@ public class NFCReadFragment extends DialogFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_read, container, false);
+        employeeListDb = AppDatabase.getInstance(getActivity());
         initViews(view);
         return view;
     }
@@ -115,6 +119,14 @@ public class NFCReadFragment extends DialogFragment {
                 String name = TimesheetUtil.getStaffName(message);
                 String uId = TimesheetUtil.getStaffUniqueId(message);
                 String employer = TimesheetUtil.getEmployer(message);
+                AppExecutors.getInstance().diskIO().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (employeeListDb.employeeDao().loadEmployeeByUid(uId) != null) {
+                            TimesheetUtil.availability = employeeListDb.employeeDao().loadEmployeeByUid(uId).isEmployeeAvailable();
+                        }
+                    }
+                });
 
                 mTvMessage.setText(TimesheetUtil.parseNFCMessageStaff(message));
 
@@ -137,8 +149,8 @@ public class NFCReadFragment extends DialogFragment {
             if (ndefMessage != null) {
                 message = new String(ndefMessage.getRecords()[0].getPayload());
             }
+            ndef.close();
         }
-        ndef.close();
         return message;
     }
 

@@ -1,7 +1,6 @@
 package com.tag.management.nfc;
 
 import android.app.PendingIntent;
-import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
@@ -34,24 +33,30 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.perf.FirebasePerformance;
 import com.google.firebase.perf.metrics.Trace;
 import com.tag.management.nfc.database.AppDatabase;
+import com.tag.management.nfc.database.DailyActivityDatabase;
+import com.tag.management.nfc.database.DailyActivityEntry;
 import com.tag.management.nfc.database.EmployeeEntry;
 import com.tag.management.nfc.engine.AppExecutors;
 import com.tag.management.nfc.model.Employee;
 import com.tag.management.nfc.model.MainViewModel;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import io.fabric.sdk.android.Fabric;
 
 import static android.support.v7.widget.DividerItemDecoration.VERTICAL;
 
-public class TagReaderActivity extends AppCompatActivity implements Listener, StaffListener,  EmployeeAdapter.ItemClickListener{
+public class TagReaderActivity extends AppCompatActivity implements Listener, StaffListener, EmployeeAdapter.ItemClickListener {
 
+    public static final String READ_FROM_NFC = "readFromNfc";
+    public static final String DATA = "data";
+    public static final String EMPLOYEES = "employees";
+    public static final String INSTANCE_TASK_ID = "instanceTaskId";
     private static final String ANONYMOUS = "anonymous";
     private static final int RC_SIGN_IN = 1;
+    // Constant for default task id to be used when not in update mode
+    private static final int DEFAULT_TASK_ID = -1;
     //firebase instance variables
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
@@ -60,25 +65,19 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
     private String employerUid, employerName;
     private NFCReadFragment mNfcReadFragment;
     private boolean isDialogDisplayed = false;
-    public static final String READ_FROM_NFC = "readFromNfc";
-    public static final String DATA = "data";
-    public static final String EMPLOYEES = "employees";
     private NfcAdapter mNfcAdapter;
     private String tagEmployer = "";
     private String appEmployer;
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mMessagesDatabaseReference;
     private ChildEventListener mChildEventListener;
-
-    public static final String INSTANCE_TASK_ID = "instanceTaskId";
-    // Constant for default task id to be used when not in update mode
-    private static final int DEFAULT_TASK_ID = -1;
     private int mTaskId = DEFAULT_TASK_ID;
 
     private RecyclerView mRecyclerView;
     private EmployeeAdapter mAdapter;
 
-    private AppDatabase mDb;
+    private AppDatabase employeeListDb;
+    private DailyActivityDatabase dailyActivityDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,7 +114,8 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
         DividerItemDecoration decoration = new DividerItemDecoration(getApplicationContext(), VERTICAL);
         mRecyclerView.addItemDecoration(decoration);
 
-        mDb = AppDatabase.getInstance(getApplicationContext());
+        employeeListDb = AppDatabase.getInstance(getApplicationContext());
+        dailyActivityDb = DailyActivityDatabase.getInstance(getApplicationContext());
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -153,25 +153,20 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
         Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
 
         if (tag != null) {
-            //Toast.makeText(this, getString(R.string.message_tag_detected), Toast.LENGTH_SHORT).show();
 
             if (isDialogDisplayed) {
-                    myTrace.incrementCounter(READ_FROM_NFC);
-                    mNfcReadFragment = (NFCReadFragment) getFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
-                    Ndef ndef = Ndef.get(tag);
+                myTrace.incrementCounter(READ_FROM_NFC);
+                mNfcReadFragment = (NFCReadFragment) getFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
+                Ndef ndef = Ndef.get(tag);
 
-                    String employeeUniqueId = mNfcReadFragment.returnStaffName(ndef);
-                    tagEmployer = mNfcReadFragment.returnEmployerName(ndef);
-                    if(appEmployer.toLowerCase().equals(tagEmployer.toLowerCase())){
-                        mNfcReadFragment.onNfcDetectedStaff(ndef);
+                tagEmployer = mNfcReadFragment.returnEmployerName(ndef);
+                if (appEmployer.toLowerCase().equals(tagEmployer.toLowerCase())) {
+                    mNfcReadFragment.onNfcDetectedStaff(ndef);
 
-
-
-                    } else {
-                        Toast.makeText(this, "Sorry, this tag is for " + (tagEmployer.length()>1 ? tagEmployer : "another business") + ". We work for " + appEmployer, Toast.LENGTH_LONG).show();
-                    }
-                    //todo check if employeeUniqueId is in Room then set its availability to true
+                } else {
+                    Toast.makeText(this, "Sorry, this tag is for " + (tagEmployer.length() > 1 ? tagEmployer : "another business") + ". We work for " + appEmployer, Toast.LENGTH_LONG).show();
                 }
+            }
         }
     }
 
@@ -288,10 +283,10 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
                     @Override
                     public void run() {
 
-                            // check if employee is not in DB then add it
-                            if(mDb.employeeDao().loadEmployeeByUid(employeeIndividual.getEmployeeUniqueId()) == null){
-                                mDb.employeeDao().insertEmployee(employeeIndividual);
-                            }
+                        // check if employee is not in DB then add it
+                        if (employeeListDb.employeeDao().loadEmployeeByUid(employeeIndividual.getEmployeeUniqueId()) == null) {
+                            employeeListDb.employeeDao().insertEmployee(employeeIndividual);
+                        }
                     }
                 });
             }
@@ -328,25 +323,58 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
         //todo, change manual
     }
 
+    private void updateStaffAvailability(String uId, boolean availability) {
+        if (employeeListDb.employeeDao().loadEmployeeByUid(uId) != null) {
+            EmployeeEntry employee = null;
+            employee = employeeListDb.employeeDao().loadEmployeeByUid(uId);
+            employee.setEmployeeAvailable(availability);
+            employeeListDb.employeeDao().updateEmployee(employee);
+        }
+    }
+
     @Override
     public void onStaffDetails(String name, String uId, String employer) {
         Log.d("TAG", name);
-        //todo can we only update availability flag
-        final EmployeeEntry employeeIndividual = new EmployeeEntry(employer, name, "employee.getEmployerUid()", "employee.getEmployeeDownloadUrl()", "employee.getEmployeeEmail()", uId, true);
-        //mDb.employeeDao().updateEmployee(employeeIndividual);
+
+        //employeeIndividual = new DailyActivityEntry(employer, name,   TimesheetUtil.getCurrentTimeUsingCalendar(), TimesheetUtil.getCurrentTimeUsingCalendar(), uId);
+
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
+                DailyActivityEntry employeeIndividual = null;
+                boolean availability = false;
+                if (dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId) == null) {
+                    //new start staff
+                    employeeIndividual = new DailyActivityEntry(employer, name, TimesheetUtil.getCurrentTimeUsingCalendar(), "", uId);
+                    availability = true;
 
-                mDb.employeeDao().updateEmployee(employeeIndividual);
+                } else if (TextUtils.isEmpty(dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampOut())) {
+                    //finishing staff
+                    employeeIndividual = new DailyActivityEntry(employer, name, dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampIn(), TimesheetUtil.getCurrentTimeUsingCalendar(), uId);
+                    dailyActivityDb.dailyActivityDao().deleteEmployee(dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId));
+                    availability = false;
+
+                } else if (!TextUtils.isEmpty(dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampIn()) && !TextUtils.isEmpty(dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampOut())) {
+                    //returning after break
+                    int inCounter = dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampIn().split("-").length;
+                    int outCounter = dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampOut().split("-").length;
+
+                    if (inCounter > outCounter) {
+                        // returning finishing
+                        employeeIndividual = new DailyActivityEntry(employer, name, dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampIn(), dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampOut() + "-" + TimesheetUtil.getCurrentTimeUsingCalendar(), uId);
+                        availability = false;
+                    } else {
+                        // returning start
+                        employeeIndividual = new DailyActivityEntry(employer, name, dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampIn() + "-" + TimesheetUtil.getCurrentTimeUsingCalendar(), dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampOut(), uId);
+                        availability = true;
+                    }
+                    dailyActivityDb.dailyActivityDao().deleteEmployee(dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId));
+                }
+                updateStaffAvailability(uId, availability);
+                dailyActivityDb.dailyActivityDao().insertEmployee(employeeIndividual);
             }
         });
 
-
-        Employee newEmployee = new Employee();
-        newEmployee.setEmployeeFullName(name);
-        newEmployee.setEmployeeUniqueId(uId);
-        newEmployee.setEmployeeAvailable(true);
 
         //todo get name of staff and add/remove in db
     }

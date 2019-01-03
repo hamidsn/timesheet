@@ -21,6 +21,7 @@ android {
         applicationId "com.timesheet.management.nfc"
         minSdkVersion 19
         targetSdkVersion 27
+        multiDexEnabled true
         versionCode 1
         versionName "1.0-Employer"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -41,7 +42,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
 }
 
 dependencies {

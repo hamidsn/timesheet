@@ -20,11 +20,13 @@ public class TimesheetUtil {
     private static final String EMPLOYEE = "Employee: ";
     private static final String HELLO = "Hello";
     private static final String BYE = "Bye";
+    private static final String WRONG_TAG = "Tag read error";
     private static final String EMPLOYER = "Employer:";
     private static final String REGISTEREDAT = "Registered at ";
     private static final String TITLE = "Title";
     private static final String newLine = "\n";
     private static final String PATTERN_CURRENT = "EEE d MMM HH:mm";
+    public static boolean availability;
 
     static boolean isEmailValid(String email) {
         Pattern pattern = Patterns.EMAIL_ADDRESS;
@@ -45,7 +47,7 @@ public class TimesheetUtil {
 
     public static String parseNFCMessageManager(String message) {
         String tagMessage;
-        String[] items = message.toString().split(newLine);
+        String[] items = message.split(newLine);
         if(items.length == 3) {
             tagMessage = EMPLOYEE + newLine + items[0] + newLine + newLine + EMPLOYER + newLine + items[1] + newLine + newLine + REGISTEREDAT + getActualTime(items[2]);
 
@@ -57,11 +59,11 @@ public class TimesheetUtil {
 
     public static String parseNFCMessageStaff(String message) {
         String tagMessage;
-        String[] items = message.toString().split(newLine);
+        String[] items = message.split(newLine);
 
         if(items.length == 3) {
             /*todo if sign in or sign out*/
-            tagMessage = (true ? HELLO : BYE) + newLine + items[0] + newLine + newLine + getCurrentTimeUsingCalendar();
+            tagMessage = (availability ? HELLO : BYE) + newLine + items[0] + newLine + newLine + getCurrentTimeUsingCalendar();
 
         } else {
             tagMessage = "not a valid tag for this app. It contains :" + newLine + items[0];
@@ -71,18 +73,18 @@ public class TimesheetUtil {
 
     public static String getEmployer(String message) {
         String tagMessage;
-        String[] items = message.toString().split(newLine);
-        return items[1];
+        String[] items = message.split(newLine);
+        return items.length > 0 ? items[1] : WRONG_TAG;
     }
 
     public static String getStaffName(String message) {
-        String[] items = message.toString().split(newLine);
+        String[] items = message.split(newLine);
         return items[0];
     }
 
     public static String getStaffUniqueId(String message) {
-        String[] items = message.toString().split(newLine);
-        return items[2];
+        String[] items = message.split(newLine);
+        return items.length > 0 ? items[2] : WRONG_TAG;
     }
 
     private static String getActualTime(String s) {
