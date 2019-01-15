@@ -1,6 +1,5 @@
 package com.tag.management.nfc.database;
 
-import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
@@ -14,7 +13,7 @@ import java.util.List;
 public interface DailyActivityDao {
 
     @Query("SELECT * FROM dailyactivity ORDER BY employeeTimestampIn")
-    LiveData<List<DailyActivityEntry>> loadAllEmployees();
+    List<DailyActivityEntry> loadAllEmployees();
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertEmployee(DailyActivityEntry dailyActivityEntry);
@@ -26,7 +25,7 @@ public interface DailyActivityDao {
     void deleteEmployee(DailyActivityEntry dailyActivityEntry);
 
     @Query("SELECT * FROM dailyactivity WHERE id = :id")
-    LiveData<DailyActivityEntry> loadEmployeeById(int id);
+    DailyActivityEntry loadEmployeeById(int id);
 
     @Query("SELECT * FROM dailyactivity WHERE employeeUniqueId = :employeeUniqueId")
     DailyActivityEntry loadEmployeeByUid(String employeeUniqueId);

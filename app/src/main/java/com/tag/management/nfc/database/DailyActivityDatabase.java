@@ -6,6 +6,15 @@ import android.arch.persistence.room.RoomDatabase;
 import android.content.Context;
 import android.util.Log;
 
+import com.tag.management.nfc.TimesheetUtil;
+import com.tag.management.nfc.worker.MidnightFinder;
+
+import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
+
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
+
 @Database(entities = {DailyActivityEntry.class}, version = 12, exportSchema = false)
 public abstract class DailyActivityDatabase extends RoomDatabase {
 
@@ -23,6 +32,15 @@ public abstract class DailyActivityDatabase extends RoomDatabase {
                         .fallbackToDestructiveMigration()
                         .build();
             }
+
+            //run once off workers
+            OneTimeWorkRequest midnightWorkRequest =
+                    new OneTimeWorkRequest.Builder(MidnightFinder.class)
+                            .setInitialDelay(TimesheetUtil.getMillisTillMidnight(), TimeUnit.MILLISECONDS)
+                            .build();
+
+            WorkManager.getInstance().enqueue(midnightWorkRequest);
+
         }
         Log.d(LOG_TAG, "Getting the database instance");
         return sInstance;

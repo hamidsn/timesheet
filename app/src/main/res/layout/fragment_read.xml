@@ -28,6 +28,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/activity_horizontal_margin"
+        android:layout_marginBottom="@dimen/snackbar_margin"
         android:layout_gravity="center"
         android:textAppearance="?android:attr/textAppearanceMedium"/>
 

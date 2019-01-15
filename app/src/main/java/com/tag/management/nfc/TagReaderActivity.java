@@ -117,15 +117,8 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
         employeeListDb = AppDatabase.getInstance(getApplicationContext());
         dailyActivityDb = DailyActivityDatabase.getInstance(getApplicationContext());
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                /*Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();*/
-                showReadFragment();
-            }
-        });
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(view -> showReadFragment());
         setupViewModel();
     }
 
@@ -184,30 +177,27 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         mMessagesDatabaseReference = mFirebaseDatabase.getReference().child(EMPLOYEES);
 
-        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+        mAuthStateListener = firebaseAuth -> {
 
-                List<AuthUI.IdpConfig> providers = Arrays.asList(
-                        new AuthUI.IdpConfig.EmailBuilder().build(),
-                        new AuthUI.IdpConfig.GoogleBuilder().build());
+            List<AuthUI.IdpConfig> providers = Arrays.asList(
+                    new AuthUI.IdpConfig.EmailBuilder().build(),
+                    new AuthUI.IdpConfig.GoogleBuilder().build());
 
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if (user != null) {
-                    // User is signed in
-                    onSignedInInitialize(user.getDisplayName(), user.getUid());
-                    appEmployer = user.getDisplayName();
-                } else {
-                    // User is signed out
-                    onSignedOutCleanup();
-                    startActivityForResult(
-                            AuthUI.getInstance()
-                                    .createSignInIntentBuilder()
-                                    .setIsSmartLockEnabled(false)
-                                    .setAvailableProviders(providers)
-                                    .build(),
-                            RC_SIGN_IN);
-                }
+            FirebaseUser user = firebaseAuth.getCurrentUser();
+            if (user != null) {
+                // User is signed in
+                onSignedInInitialize(user.getDisplayName(), user.getUid());
+                appEmployer = user.getDisplayName();
+            } else {
+                // User is signed out
+                onSignedOutCleanup();
+                startActivityForResult(
+                        AuthUI.getInstance()
+                                .createSignInIntentBuilder()
+                                .setIsSmartLockEnabled(false)
+                                .setAvailableProviders(providers)
+                                .build(),
+                        RC_SIGN_IN);
             }
         };
     }
@@ -263,6 +253,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
     private void onSignedInInitialize(String username, String uid) {
         employerName = username;
         employerUid = uid;
+        TimesheetUtil.setEmployerUid(uid);
         mMessagesDatabaseReference = mFirebaseDatabase.getReference().child(employerUid);
         attachDatabaseReadListener();
     }
@@ -279,14 +270,11 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 Employee employee = dataSnapshot.getValue(Employee.class);
                 final EmployeeEntry employeeIndividual = new EmployeeEntry(employee.getEmployerName(), employee.getEmployeeFullName(), employee.getEmployerUid(), employee.getEmployeeDownloadUrl(), employee.getEmployeeEmail(), employee.getEmployeeUniqueId(), false);
-                AppExecutors.getInstance().diskIO().execute(new Runnable() {
-                    @Override
-                    public void run() {
+                AppExecutors.getInstance().diskIO().execute(() -> {
 
-                        // check if employee is not in DB then add it
-                        if (employeeListDb.employeeDao().loadEmployeeByUid(employeeIndividual.getEmployeeUniqueId()) == null) {
-                            employeeListDb.employeeDao().insertEmployee(employeeIndividual);
-                        }
+                    // check if employee is not in DB then add it
+                    if (employeeListDb.employeeDao().loadEmployeeByUid(employeeIndividual.getEmployeeUniqueId()) == null) {
+                        employeeListDb.employeeDao().insertEmployee(employeeIndividual);
                     }
                 });
             }
@@ -325,7 +313,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
 
     private void updateStaffAvailability(String uId, boolean availability) {
         if (employeeListDb.employeeDao().loadEmployeeByUid(uId) != null) {
-            EmployeeEntry employee = null;
+            EmployeeEntry employee;
             employee = employeeListDb.employeeDao().loadEmployeeByUid(uId);
             employee.setEmployeeAvailable(availability);
             employeeListDb.employeeDao().updateEmployee(employee);
@@ -375,7 +363,5 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
             }
         });
 
-
-        //todo get name of staff and add/remove in db
     }
 }

@@ -19,7 +19,7 @@ android {
     buildToolsVersion "27.0.3"
     defaultConfig {
         applicationId "com.timesheet.management.nfc"
-        minSdkVersion 19
+        minSdkVersion 23
         targetSdkVersion 27
         multiDexEnabled true
         versionCode 1
@@ -90,6 +90,10 @@ dependencies {
 
     // Displaying images
     implementation 'com.github.bumptech.glide:glide:3.6.1'
+
+    // WorkManager
+    implementation 'android.arch.work:work-runtime:1.0.0-alpha13'
+
 }
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.firebase-perf'

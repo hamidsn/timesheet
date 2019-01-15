@@ -4,7 +4,10 @@ import android.content.ContentResolver;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.util.Patterns;
+
+import com.tag.management.nfc.worker.MidnightDBCleanup;
 
 import java.io.ByteArrayOutputStream;
 import java.text.DateFormat;
@@ -15,18 +18,23 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+
 public class TimesheetUtil {
     private static final String PATTERN_REGISTRATION = "MM/dd/yyyy";
     private static final String EMPLOYEE = "Employee: ";
-    private static final String HELLO = "Hello";
-    private static final String BYE = "Bye";
     private static final String WRONG_TAG = "Tag read error";
     private static final String EMPLOYER = "Employer:";
     private static final String REGISTEREDAT = "Registered at ";
     private static final String TITLE = "Title";
     private static final String newLine = "\n";
     private static final String PATTERN_CURRENT = "EEE d MMM HH:mm";
-    public static boolean availability;
+    private static final String PATTERN_DAY = "EEE dd MMM yyyy";
+    private static final String WORKERTAG = "worker_tag";
+    public static boolean isDoing = false;
+    public static String employerUid = "";
 
     static boolean isEmailValid(String email) {
         Pattern pattern = Patterns.EMAIL_ADDRESS;
@@ -48,7 +56,7 @@ public class TimesheetUtil {
     public static String parseNFCMessageManager(String message) {
         String tagMessage;
         String[] items = message.split(newLine);
-        if(items.length == 3) {
+        if (items.length == 3) {
             tagMessage = EMPLOYEE + newLine + items[0] + newLine + newLine + EMPLOYER + newLine + items[1] + newLine + newLine + REGISTEREDAT + getActualTime(items[2]);
 
         } else {
@@ -61,9 +69,9 @@ public class TimesheetUtil {
         String tagMessage;
         String[] items = message.split(newLine);
 
-        if(items.length == 3) {
+        if (items.length == 3) {
             /*todo if sign in or sign out*/
-            tagMessage = (availability ? HELLO : BYE) + newLine + items[0] + newLine + newLine + getCurrentTimeUsingCalendar();
+            tagMessage = newLine + items[0] + newLine + newLine + getCurrentTimeUsingCalendar();
 
         } else {
             tagMessage = "not a valid tag for this app. It contains :" + newLine + items[0];
@@ -104,5 +112,74 @@ public class TimesheetUtil {
         DateFormat dateFormat = new SimpleDateFormat(PATTERN_CURRENT);
         String formattedDate = dateFormat.format(date);
         return formattedDate;
+    }
+
+    public static String getCurrentDateUsingCalendar() {
+        Calendar cal = Calendar.getInstance();
+        Date date = cal.getTime();
+        DateFormat dateFormat = new SimpleDateFormat(PATTERN_DAY);
+        String formattedDate = dateFormat.format(date);
+        return formattedDate;
+    }
+
+    public static void applyDailyWorker() {
+
+        WorkManager.getInstance().cancelAllWorkByTag(WORKERTAG);
+        Log.d("worker", " DB cleaning worker is NOT running");
+
+        PeriodicWorkRequest.Builder periodicWorkRequest =
+                new PeriodicWorkRequest.Builder(
+                        MidnightDBCleanup.class,
+                        1430, // 23:50
+                        TimeUnit.MINUTES)
+                        .addTag(WORKERTAG);
+        PeriodicWorkRequest myWork = periodicWorkRequest.build();
+        //WorkManager.getInstance().enqueue(myWork);
+        WorkManager.getInstance().enqueueUniquePeriodicWork(WORKERTAG, ExistingPeriodicWorkPolicy.KEEP, myWork);
+    }
+
+
+    public static long getMillisTillMidnight() {
+        Calendar c = Calendar.getInstance();
+        c.add(Calendar.DATE, 1);
+        c.set(Calendar.HOUR_OF_DAY, 0);
+        c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        return c.getTimeInMillis() - System.currentTimeMillis();
+    }
+
+    public static long getAbsoluteMillisTillMidnight() {
+        Calendar tomorrow = Calendar.getInstance();
+        tomorrow.add(Calendar.DATE, 1);
+        tomorrow.set(Calendar.HOUR_OF_DAY, 0);
+        tomorrow.set(Calendar.MINUTE, 0);
+        tomorrow.set(Calendar.SECOND, 0);
+        tomorrow.set(Calendar.MILLISECOND, 0);
+
+        Calendar today = Calendar.getInstance();
+        today.add(Calendar.DATE, 0);
+        today.set(Calendar.HOUR_OF_DAY, 0);
+        today.set(Calendar.MINUTE, 0);
+        today.set(Calendar.SECOND, 0);
+        today.set(Calendar.MILLISECOND, 0);
+
+        long absoluteMilis;
+
+        if (System.currentTimeMillis() - today.getTimeInMillis() < 3600000) {
+            absoluteMilis = System.currentTimeMillis() - today.getTimeInMillis();
+        } else {
+            absoluteMilis = tomorrow.getTimeInMillis() - System.currentTimeMillis();
+        }
+
+        return absoluteMilis;
+    }
+
+    public static String getEmployerUid() {
+        return employerUid;
+    }
+
+    public static void setEmployerUid(String employerUid) {
+        TimesheetUtil.employerUid = employerUid;
     }
 }

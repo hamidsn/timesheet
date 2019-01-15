@@ -2,13 +2,16 @@ package com.tag.management.nfc;
 
 import android.app.DialogFragment;
 import android.content.Context;
+import android.graphics.Color;
 import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.tech.Ndef;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,6 +30,8 @@ public class NFCReadFragment extends DialogFragment {
     private Listener fragmentDisplayedListener;
     private StaffListener staffNameListener;
     private AppDatabase employeeListDb;
+    private static final String HELLO = "Hello, welcome back";
+    private static final String BYE = "Bye, see you soon.";
 
     public static NFCReadFragment newInstance() {
 
@@ -122,9 +127,20 @@ public class NFCReadFragment extends DialogFragment {
                 AppExecutors.getInstance().diskIO().execute(new Runnable() {
                     @Override
                     public void run() {
+                        boolean availability;
                         if (employeeListDb.employeeDao().loadEmployeeByUid(uId) != null) {
-                            TimesheetUtil.availability = employeeListDb.employeeDao().loadEmployeeByUid(uId).isEmployeeAvailable();
+                            availability = employeeListDb.employeeDao().loadEmployeeByUid(uId).isEmployeeAvailable();
+                        } else {
+                            availability = true;
                         }
+                        Snackbar snackbar = Snackbar
+                                .make(getView(), (!availability ? HELLO : BYE), Snackbar.LENGTH_LONG);
+                        View snackbarView = snackbar.getView();
+                        snackbarView.setBackgroundColor(Color.WHITE);
+                        TextView textView = (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
+                        textView.setTextColor(!availability ? Color.DKGRAY : Color.GRAY);
+                        textView.setGravity(Gravity.CENTER);
+                        snackbar.show();
                     }
                 });
 

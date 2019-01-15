@@ -374,6 +374,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     private void onSignedInInitialize(String username, String uid) {
         employerName = username;
         employerUid = uid;
+        TimesheetUtil.setEmployerUid(uid);
         mMessagesDatabaseReference = mFirebaseDatabase.getReference().child(employerUid);
         attachDatabaseReadListener();
     }
@@ -385,7 +386,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     }
 
     private void attachDatabaseReadListener() {
-//todo : solve me, always reads DB
+        //todo : solve me, always reads DB
         mChildEventListener = new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -424,8 +425,6 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     @Override
     protected void onNewIntent(Intent intent) {
         Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-
-        Log.d(TAG, "onNewIntent: " + intent.getAction());
 
         if (tag != null) {
             Toast.makeText(this, getString(R.string.message_tag_detected), Toast.LENGTH_SHORT).show();
