@@ -122,7 +122,7 @@ public class LauncherActivity extends AppCompatActivity {
     private void onSignedInInitialize(String username, String uid) {
         employerName = username;
         employerUid = uid;
-        TimesheetUtil.setEmployerUid(uid);
+        TimesheetUtil.setEmployerUid(uid, this);
     }
 
     private void onSignedOutCleanup() {

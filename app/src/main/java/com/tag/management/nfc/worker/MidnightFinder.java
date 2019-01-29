@@ -10,10 +10,13 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 public class MidnightFinder extends Worker {
+    private final Context mContext;
+
     public MidnightFinder(
             @NonNull Context context,
             @NonNull WorkerParameters params) {
         super(context, params);
+        mContext = context;
     }
 
     @NonNull
@@ -22,7 +25,7 @@ public class MidnightFinder extends Worker {
         // midnight DB clean up
         Log.d("worker", "midnight finder worker is running");
 
-        TimesheetUtil.applyDailyWorker();
+        TimesheetUtil.applyDailyWorker(this.mContext);
 
         return Result.success();
     }

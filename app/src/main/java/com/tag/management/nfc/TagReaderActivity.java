@@ -253,7 +253,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
     private void onSignedInInitialize(String username, String uid) {
         employerName = username;
         employerUid = uid;
-        TimesheetUtil.setEmployerUid(uid);
+        TimesheetUtil.setEmployerUid(uid, this);
         mMessagesDatabaseReference = mFirebaseDatabase.getReference().child(employerUid);
         attachDatabaseReadListener();
     }

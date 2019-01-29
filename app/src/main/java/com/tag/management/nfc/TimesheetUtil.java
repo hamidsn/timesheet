@@ -1,6 +1,8 @@
 package com.tag.management.nfc;
 
 import android.content.ContentResolver;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
@@ -18,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import androidx.work.Data;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
@@ -122,7 +125,7 @@ public class TimesheetUtil {
         return formattedDate;
     }
 
-    public static void applyDailyWorker() {
+    public static void applyDailyWorker(Context context) {
 
         WorkManager.getInstance().cancelAllWorkByTag(WORKERTAG);
         Log.d("worker", " DB cleaning worker is NOT running");
@@ -132,9 +135,12 @@ public class TimesheetUtil {
                         MidnightDBCleanup.class,
                         1430, // 23:50
                         TimeUnit.MINUTES)
-                        .addTag(WORKERTAG);
+                        .addTag(WORKERTAG)
+                        .setInputData(new Data.Builder()
+                                .putString("employer_uid", TimesheetUtil.getEmployerUid(context))
+                                .build());
+
         PeriodicWorkRequest myWork = periodicWorkRequest.build();
-        //WorkManager.getInstance().enqueue(myWork);
         WorkManager.getInstance().enqueueUniquePeriodicWork(WORKERTAG, ExistingPeriodicWorkPolicy.KEEP, myWork);
     }
 
@@ -175,11 +181,15 @@ public class TimesheetUtil {
         return absoluteMilis;
     }
 
-    public static String getEmployerUid() {
-        return employerUid;
+    public static String getEmployerUid(Context context) {
+        SharedPreferences pref = context.getSharedPreferences("TimesheetPref", 0);
+        return employerUid == null ? pref.getString("key_name", null) : employerUid;
     }
 
-    public static void setEmployerUid(String employerUid) {
+    public static void setEmployerUid(String employerUid, Context context) {
         TimesheetUtil.employerUid = employerUid;
+        SharedPreferences pref = context.getSharedPreferences("TimesheetPref", 0); // 0 - for private mode
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString("employer_uid", employerUid);
     }
 }

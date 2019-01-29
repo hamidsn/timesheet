@@ -374,7 +374,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     private void onSignedInInitialize(String username, String uid) {
         employerName = username;
         employerUid = uid;
-        TimesheetUtil.setEmployerUid(uid);
+        TimesheetUtil.setEmployerUid(uid, this);
         mMessagesDatabaseReference = mFirebaseDatabase.getReference().child(employerUid);
         attachDatabaseReadListener();
     }
