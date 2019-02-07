@@ -9,7 +9,6 @@ import android.util.Log;
 import com.tag.management.nfc.TimesheetUtil;
 import com.tag.management.nfc.worker.MidnightFinder;
 
-import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
 import androidx.work.OneTimeWorkRequest;

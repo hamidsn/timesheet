@@ -9,13 +9,13 @@ import android.support.annotation.NonNull;
 @Entity(tableName = "employee")
 public class Employee {
 
-   // @PrimaryKey(autoGenerate = true)
-   // private int id;
+    // @PrimaryKey(autoGenerate = true)
+    // private int id;
 
     @ColumnInfo(name = "employer_name")
     private String employerName;
 
-   // @ColumnInfo(name = "employee_full_name")
+    // @ColumnInfo(name = "employee_full_name")
     private String employeeFullName;
 
     @ColumnInfo(name = "employer_uid")

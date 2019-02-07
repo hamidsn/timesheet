@@ -1,23 +1,23 @@
 /*
-* Copyright (C) 2016 The Android Open Source Project
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*      http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.tag.management.nfc;
 
 import android.content.Context;
-import android.graphics.drawable.GradientDrawable;
+import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -48,8 +48,6 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
     // Class variables for the List that holds task data and the Context
     private List<EmployeeEntry> mTaskEntries;
     private Context mContext;
-    // Date formatter
-    private SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT, Locale.getDefault());
 
     /**
      * Constructor for the EmployeeAdapter that initializes the Context.
@@ -68,7 +66,7 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
      * @return A new EmployeeViewHolder that holds the view for each task
      */
     @Override
-    public EmployeeViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public EmployeeViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         // Inflate the task_layout to a view
         View view = LayoutInflater.from(mContext)
                 .inflate(R.layout.task_layout, parent, false);
@@ -83,7 +81,7 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
      * @param position The position of the data in the Cursor
      */
     @Override
-    public void onBindViewHolder(EmployeeViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull EmployeeViewHolder holder, int position) {
         // Determine the values of the wanted data
         EmployeeEntry taskEntry = mTaskEntries.get(position);
         String name = taskEntry.getEmployeeFullName();
@@ -112,29 +110,6 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
         priorityCircle.setColor(priorityColor);*/
     }
 
-    /*
-    Helper method for selecting the correct priority circle color.
-    P1 = red, P2 = orange, P3 = yellow
-    */
-    private int getPriorityColor(int priority) {
-        int priorityColor = 0;
-
-        switch (priority) {
-            case 1:
-                priorityColor = ContextCompat.getColor(mContext, R.color.materialRed);
-                break;
-            case 2:
-                priorityColor = ContextCompat.getColor(mContext, R.color.materialOrange);
-                break;
-            case 3:
-                priorityColor = ContextCompat.getColor(mContext, R.color.materialYellow);
-                break;
-            default:
-                break;
-        }
-        return priorityColor;
-    }
-
     /**
      * Returns the number of items to display.
      */
@@ -146,15 +121,15 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
         return mTaskEntries.size();
     }
 
-    public List<EmployeeEntry> getTasks() {
+/*    public List<EmployeeEntry> getTasks() {
         return mTaskEntries;
-    }
+    }*/
 
     /**
      * When data changes, this method updates the list of taskEntries
      * and notifies the adapter to use the new values on it
      */
-    public void setTasks(List<EmployeeEntry> taskEntries) {
+    void setTasks(List<EmployeeEntry> taskEntries) {
         mTaskEntries = taskEntries;
         notifyDataSetChanged();
     }
@@ -177,7 +152,7 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
          *
          * @param itemView The view inflated in onCreateViewHolder
          */
-        public EmployeeViewHolder(View itemView) {
+        EmployeeViewHolder(View itemView) {
             super(itemView);
 
             employeeName = itemView.findViewById(R.id.employeeName);

@@ -30,8 +30,6 @@ public class LauncherActivity extends AppCompatActivity {
     //firebase instance variables
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
-    private Trace myTrace;
-    private String STARTUP_TRACE_NAME = "nfc_launcher_trace";
     private String employerUid, employerName;
 
     @Override
@@ -45,32 +43,30 @@ public class LauncherActivity extends AppCompatActivity {
         //todo: are we used?
         employerName = ANONYMOUS;
         employerUid = ANONYMOUS;
-        myTrace = FirebasePerformance.getInstance().newTrace(STARTUP_TRACE_NAME);
+        String STARTUP_TRACE_NAME = "nfc_launcher_trace";
+        Trace myTrace = FirebasePerformance.getInstance().newTrace(STARTUP_TRACE_NAME);
         myTrace.start();
         Fabric.with(this, new Crashlytics());
 
-        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                List<AuthUI.IdpConfig> providers = Arrays.asList(
-                        new AuthUI.IdpConfig.EmailBuilder().build(),
-                        new AuthUI.IdpConfig.GoogleBuilder().build());
+        mAuthStateListener = firebaseAuth -> {
+            List<AuthUI.IdpConfig> providers = Arrays.asList(
+                    new AuthUI.IdpConfig.EmailBuilder().build(),
+                    new AuthUI.IdpConfig.GoogleBuilder().build());
 
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if (user != null) {
-                    // User is signed in
-                    onSignedInInitialize(user.getDisplayName(), user.getUid());
-                } else {
-                    // User is signed out
-                    onSignedOutCleanup();
-                    startActivityForResult(
-                            AuthUI.getInstance()
-                                    .createSignInIntentBuilder()
-                                    .setIsSmartLockEnabled(false)
-                                    .setAvailableProviders(providers)
-                                    .build(),
-                            RC_SIGN_IN);
-                }
+            FirebaseUser user = firebaseAuth.getCurrentUser();
+            if (user != null) {
+                // User is signed in
+                onSignedInInitialize(user.getDisplayName(), user.getUid());
+            } else {
+                // User is signed out
+                onSignedOutCleanup();
+                startActivityForResult(
+                        AuthUI.getInstance()
+                                .createSignInIntentBuilder()
+                                .setIsSmartLockEnabled(false)
+                                .setAvailableProviders(providers)
+                                .build(),
+                        RC_SIGN_IN);
             }
         };
 

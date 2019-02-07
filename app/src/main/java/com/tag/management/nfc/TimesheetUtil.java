@@ -1,5 +1,6 @@
 package com.tag.management.nfc;
 
+import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -56,7 +57,7 @@ public class TimesheetUtil {
         return String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
     }
 
-    public static String parseNFCMessageManager(String message) {
+    static String parseNFCMessageManager(String message) {
         String tagMessage;
         String[] items = message.split(newLine);
         if (items.length == 3) {
@@ -68,7 +69,7 @@ public class TimesheetUtil {
         return tagMessage;
     }
 
-    public static String parseNFCMessageStaff(String message) {
+    static String parseNFCMessageStaff(String message) {
         String tagMessage;
         String[] items = message.split(newLine);
 
@@ -82,18 +83,18 @@ public class TimesheetUtil {
         return tagMessage;
     }
 
-    public static String getEmployer(String message) {
-        String tagMessage;
+    static String getEmployer(String message) {
+        //String tagMessage;
         String[] items = message.split(newLine);
         return items.length > 0 ? items[1] : WRONG_TAG;
     }
 
-    public static String getStaffName(String message) {
+    static String getStaffName(String message) {
         String[] items = message.split(newLine);
         return items[0];
     }
 
-    public static String getStaffUniqueId(String message) {
+    static String getStaffUniqueId(String message) {
         String[] items = message.split(newLine);
         return items.length > 0 ? items[2] : WRONG_TAG;
     }
@@ -101,7 +102,7 @@ public class TimesheetUtil {
     private static String getActualTime(String s) {
         long timeStamp = Long.parseLong(s) * 1000L;
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat(PATTERN_REGISTRATION);
+            @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat(PATTERN_REGISTRATION);
             Date netDate = (new Date(timeStamp));
             return sdf.format(netDate);
         } catch (Exception ex) {
@@ -112,17 +113,15 @@ public class TimesheetUtil {
     public static String getCurrentTimeUsingCalendar() {
         Calendar cal = Calendar.getInstance();
         Date date = cal.getTime();
-        DateFormat dateFormat = new SimpleDateFormat(PATTERN_CURRENT);
-        String formattedDate = dateFormat.format(date);
-        return formattedDate;
+        @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat(PATTERN_CURRENT);
+        return dateFormat.format(date);
     }
 
     public static String getCurrentDateUsingCalendar() {
         Calendar cal = Calendar.getInstance();
         Date date = cal.getTime();
-        DateFormat dateFormat = new SimpleDateFormat(PATTERN_DAY);
-        String formattedDate = dateFormat.format(date);
-        return formattedDate;
+        @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat(PATTERN_DAY);
+        return dateFormat.format(date);
     }
 
     public static void applyDailyWorker(Context context) {
@@ -186,10 +185,10 @@ public class TimesheetUtil {
         return employerUid == null ? pref.getString("key_name", null) : employerUid;
     }
 
-    public static void setEmployerUid(String employerUid, Context context) {
+    static void setEmployerUid(String employerUid, Context context) {
         TimesheetUtil.employerUid = employerUid;
         SharedPreferences pref = context.getSharedPreferences("TimesheetPref", 0); // 0 - for private mode
-        SharedPreferences.Editor editor = pref.edit();
+        @SuppressLint("CommitPrefEdits") SharedPreferences.Editor editor = pref.edit();
         editor.putString("employer_uid", employerUid);
     }
 }

@@ -3,12 +3,10 @@ package com.tag.management.nfc;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.nfc.NdefMessage;
-import android.nfc.NdefRecord;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.nfc.tech.NdefFormatable;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
@@ -21,13 +19,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.creativityapps.gmailbackgroundlibrary.BackgroundMail;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 import com.tag.management.nfc.engine.EncodeMorseManager;
 
-import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -76,8 +71,8 @@ public class NFCWriteFragment extends DialogFragment {
 
     private void initViews(View view) {
 
-        mTvMessage = (TextView) view.findViewById(R.id.tv_message);
-        mProgress = (ProgressBar) view.findViewById(R.id.progress);
+        mTvMessage = view.findViewById(R.id.tv_message);
+        mProgress = view.findViewById(R.id.progress);
     }
 
     @Override
@@ -159,18 +154,8 @@ public class NFCWriteFragment extends DialogFragment {
                     .withSubject(getResources().getString(R.string.email_title))
                     //todo: create a good message
                     .withBody(body).withProcessVisibility(false)
-                    .withOnSuccessCallback(new BackgroundMail.OnSuccessCallback() {
-                        @Override
-                        public void onSuccess() {
-                            Toast.makeText(getActivity(), EMAIL_SENT, Toast.LENGTH_LONG).show();
-                        }
-                    })
-                    .withOnFailCallback(new BackgroundMail.OnFailCallback() {
-                        @Override
-                        public void onFail() {
-                            Toast.makeText(getActivity(), EMAIL_FAILED, Toast.LENGTH_LONG).show();
-                        }
-                    })
+                    .withOnSuccessCallback(() -> Toast.makeText(getActivity(), EMAIL_SENT, Toast.LENGTH_LONG).show())
+                    .withOnFailCallback(() -> Toast.makeText(getActivity(), EMAIL_FAILED, Toast.LENGTH_LONG).show())
                     .send();
         }
     }
@@ -183,15 +168,18 @@ public class NFCWriteFragment extends DialogFragment {
                 Toast.makeText(getActivity(), "Tag is not formatable", Toast.LENGTH_LONG).show();
             }
 
-            ndefFormatable.connect();
-            ndefFormatable.format(ndefMessage);
-            ndefFormatable.close();
+            if (ndefFormatable != null) {
+                ndefFormatable.connect();
+                ndefFormatable.format(ndefMessage);
+                ndefFormatable.close();
+            }
+
         } catch (Exception e) {
             Log.e("formatTag", e.getMessage());
         }
     }
 
-    private String getTextFromNdefRecord(NdefRecord ndefRecord) {
+/*    private String getTextFromNdefRecord(NdefRecord ndefRecord) {
         String content = null;
         try {
             byte[] payload = ndefRecord.getPayload();
@@ -203,7 +191,7 @@ public class NFCWriteFragment extends DialogFragment {
         }
 
         return content;
-    }
+    }*/
 
     // Fetch the config to determine the allowed send_email.
     public void fetchConfig() {
@@ -212,20 +200,14 @@ public class NFCWriteFragment extends DialogFragment {
             cacheExpiration = 0;
         }
         mFirebaseRemoteConfig.fetch(cacheExpiration)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        mFirebaseRemoteConfig.activateFetched();
-                        applyRetrievedLengthLimit();
-                    }
+                .addOnSuccessListener(aVoid -> {
+                    mFirebaseRemoteConfig.activateFetched();
+                    applyRetrievedLengthLimit();
                 })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        // An error occurred when fetching the config.
-                        Log.w(TAG, "Error fetching config", e);
-                        applyRetrievedLengthLimit();
-                    }
+                .addOnFailureListener(e -> {
+                    // An error occurred when fetching the config.
+                    Log.w(TAG, "Error fetching config", e);
+                    applyRetrievedLengthLimit();
                 });
     }
 

@@ -10,7 +10,7 @@ public class EncodeMorseManager {
 
     @AddTrace(name = "getEncodedString", enabled = true)
     public static String getEncodedString(String inputMessage) {
-        if(inputMessage.equals("")){
+        if (inputMessage.equals("")) {
             return "Please enter at least one character";
         } else {
             // Converts the input string into a StringBuffer
@@ -50,7 +50,7 @@ public class EncodeMorseManager {
                         d++;
                     }
                 }
-                if(sign.toString().equals(".-")) {
+                if (sign.toString().equals(".-")) {
                     output.append("A");
                 } else if (sign.toString().equals("-...")) {
                     output.append("B");

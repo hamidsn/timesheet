@@ -4,10 +4,8 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.tag.management.nfc.TagReaderActivity;
 import com.tag.management.nfc.TimesheetUtil;
 import com.tag.management.nfc.database.AppDatabase;
 import com.tag.management.nfc.database.DailyActivityDatabase;
@@ -24,14 +22,11 @@ import androidx.work.WorkerParameters;
 
 public class MidnightDBCleanup extends Worker {
 
-    private static final String TIMES = "times";
+    // private static final String TIMES = "times";
     private final Context mContext;
     private DailyActivityDatabase dailyActivityDb;
     private AppDatabase employeeListDb;
-    private List<DailyActivityEntry> staff;
-    private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mMessagesDatabaseReference;
-    private ChildEventListener mChildEventListener;
 
     public MidnightDBCleanup(
             @NonNull Context context,
@@ -54,14 +49,14 @@ public class MidnightDBCleanup extends Worker {
 
             String fBDbName = TimesheetUtil.getCurrentDateUsingCalendar();
             fBDbName = fBDbName.replace(".", "-").replace(" ", "-").replace("#", "-").replace("$", "-").replace("[", "-").replace("]", "-");
-            mFirebaseDatabase = FirebaseDatabase.getInstance();
+            FirebaseDatabase mFirebaseDatabase = FirebaseDatabase.getInstance();
 
             mMessagesDatabaseReference = mFirebaseDatabase.getReference().child(fBDbName).child("" + (employerUid.isEmpty() ? TimesheetUtil.getEmployerUid(this.mContext) : employerUid));
 
             // midnight DB clean up
             Log.d("worker", " DB cleaning worker is running");
 
-            //check if around one night from midnight
+            //check if around one hour from midnight
             if (TimesheetUtil.getAbsoluteMillisTillMidnight() > 3600000) {
                 //run once off workers
                 OneTimeWorkRequest midnightWorkRequest =
@@ -76,7 +71,7 @@ public class MidnightDBCleanup extends Worker {
                 dailyActivityDb = DailyActivityDatabase.getInstance(getApplicationContext());
                 employeeListDb = AppDatabase.getInstance(getApplicationContext());
 
-                staff = dailyActivityDb.dailyActivityDao().loadAllEmployees();
+                List<DailyActivityEntry> staff = dailyActivityDb.dailyActivityDao().loadAllEmployees();
                 for (DailyActivityEntry entry : staff) {
                     int inCounter = entry.getEmployeeTimestampIn().split("-").length;
                     int outCounter = entry.getEmployeeTimestampOut().split("-").length;

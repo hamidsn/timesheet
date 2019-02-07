@@ -3,7 +3,6 @@ package com.tag.management.nfc.database;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
-import android.support.annotation.NonNull;
 
 @Entity(tableName = "dailyactivity")
 public class DailyActivityEntry {
@@ -34,16 +33,16 @@ public class DailyActivityEntry {
         this.employeeUniqueId = employeeUniqueId;
     }
 
+    @Ignore
+    public DailyActivityEntry() {
+    }
+
     public int getId() {
         return id;
     }
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    @Ignore
-    public DailyActivityEntry() {
     }
 
     public String getEmployerName() {

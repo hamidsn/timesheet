@@ -9,7 +9,7 @@ public class DecodeMorseManager {
 
     @AddTrace(name = "getDecodedString", enabled = true)
     public static String getDecodedString(String inputMessage) {
-        if(inputMessage.equals("")){
+        if (inputMessage.equals("")) {
             return "Please enter at least one character";
         } else {
             StringBuffer message = new StringBuffer(inputMessage);
@@ -48,7 +48,7 @@ public class DecodeMorseManager {
                         }
                         output.append("       ");
                         input.delete(0, 1);
-                    } else if(input.toString().startsWith("\n")) {
+                    } else if (input.toString().startsWith("\n")) {
                         output.append("\n");
                         input.deleteCharAt(input.indexOf("\n"));
                     } else if (input.toString().startsWith("A")) {

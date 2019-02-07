@@ -12,7 +12,6 @@ import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -30,9 +29,6 @@ import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.tasks.Continuation;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -89,19 +85,15 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     public static final String SIGNOUT = "signout";
     public static final String WRITE_2_NFC = "write2nfc";
     public static final String UTF_8 = "UTF-8";
-    private String STARTUP_TRACE_NAME = "nfc_management_trace";
-
-    private String mCurrentPhotoPath;
+    private static final int RC_PHOTO_PICKER = 2;
     private Uri photoURI;
     private EditText mEtName, mEtEmail;
     private ImageView photoPickerImage;
-    private Button mBtWrite, mBtRead, mBImage;
+    private Button mBtWrite;
+    private Button mBImage;
     private String employerUid;
     private NFCWriteFragment mNfcWriteFragment;
     private NFCReadFragment mNfcReadFragment;
-
-    private static final int RC_PHOTO_PICKER = 2;
-
     private boolean isDialogDisplayed = false;
     private boolean isWrite = false;
     private Uri downloadUrl = null;
@@ -113,15 +105,31 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
 
-    //firebase storage
-    private FirebaseStorage mFirebaseStorage;
     private StorageReference mStaffPhotosStorageReference;
 
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mMessagesDatabaseReference;
     private ChildEventListener mChildEventListener;
     private Trace myTrace;
-    private int PIC_CROP = 3;
+    //private int PIC_CROP = 3;
+    private TextWatcher inputValidation = new TextWatcher() {
+
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            mBtWrite.setEnabled(mEtName.getText().toString().length() > 0 && TimesheetUtil.isEmailValid(mEtEmail.getText().toString()));
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+
+        }
+
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -151,53 +159,39 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
             }
         } else if (requestCode == RC_PHOTO_PICKER && resultCode == RESULT_OK) {
             //setPic();
-            if (requestCode == RC_PHOTO_PICKER && resultCode == RESULT_OK) {
-                Bundle extras = data.getExtras();
+            Bundle extras = data.getExtras();
+            if (extras != null) {
                 Bitmap imageBitmap = (Bitmap) extras.get(DATA);
                 photoPickerImage.setImageBitmap(imageBitmap);
                 photoURI = TimesheetUtil.imageToUri(imageBitmap, getApplicationContext().getContentResolver());
                 storeImageFirebase();
             }
+
         }
     }
 
     private void storeImageFirebase() {
         StorageReference photoRef = mStaffPhotosStorageReference.child(photoURI.getLastPathSegment());
         // Upload file to Firebase Storage
-        /*photoRef.putFile(photoURI)
-                .addOnSuccessListener(this, new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        // When the image has successfully uploaded, we get its download URL
-                        downloadUrl = taskSnapshot.getDownloadUrl();
-                        // Set the download URL to the message box, so that the user can send it to the database
-                    }
-                });*/
 
         //todo test download url
-        UploadTask uploadTask =  photoRef.putFile(photoURI);
-        Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-            @Override
-            public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
-                if (!task.isSuccessful()) {
-                    throw task.getException();
-                }
-
-                // Continue with the task to get the download URL
-                return photoRef.getDownloadUrl();
+        UploadTask uploadTask = photoRef.putFile(photoURI);
+        Task<Uri> urlTask = uploadTask.continueWithTask(task -> {
+            if (!task.isSuccessful()) {
+                throw task.getException();
             }
-        }).addOnCompleteListener(new OnCompleteListener<Uri>() {
-            @Override
-            public void onComplete(@NonNull Task<Uri> task) {
-                if (task.isSuccessful()) {
-                    downloadUrl = task.getResult();
-                } else {
-                    // Handle failures
-                    // ...
-                }
+
+            // Continue with the task to get the download URL
+            return photoRef.getDownloadUrl();
+        }).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                downloadUrl = task.getResult();
+            } else {
+                // Handle failures
+                // ...
             }
         });
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -207,12 +201,12 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     }
 
     private void initViews() {
-        mEtName = (EditText) findViewById(R.id.et_name);
-        mEtEmail = (EditText) findViewById(R.id.et_email);
-        mBtWrite = (Button) findViewById(R.id.btn_write);
-        mBtRead = (Button) findViewById(R.id.btn_read);
-        mBImage = (Button) findViewById(R.id.btn_image);
-        photoPickerImage = (ImageView) findViewById(R.id.photoPicker);
+        mEtName = findViewById(R.id.et_name);
+        mEtEmail = findViewById(R.id.et_email);
+        mBtWrite = findViewById(R.id.btn_write);
+        Button mBtRead = findViewById(R.id.btn_read);
+        mBImage = findViewById(R.id.btn_image);
+        photoPickerImage = findViewById(R.id.photoPicker);
 
         mEtName.addTextChangedListener(inputValidation);
         mEtEmail.addTextChangedListener(inputValidation);
@@ -231,38 +225,37 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
 
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         mMessagesDatabaseReference = mFirebaseDatabase.getReference().child(EMPLOYEES);
+        String STARTUP_TRACE_NAME = "nfc_management_trace";
         myTrace = FirebasePerformance.getInstance().newTrace(STARTUP_TRACE_NAME);
         myTrace.start();
 
-        mFirebaseStorage = FirebaseStorage.getInstance();
+        //firebase storage
+        FirebaseStorage mFirebaseStorage = FirebaseStorage.getInstance();
         mStaffPhotosStorageReference = mFirebaseStorage.getReference().child(STAFF_PHOTOS);
 
         myTrace.incrementCounter(INIT_NFC);
 
         myTrace.incrementCounter(AUTHENTICATION);
-        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+        mAuthStateListener = firebaseAuth -> {
 
-                List<AuthUI.IdpConfig> providers = Arrays.asList(
-                        new AuthUI.IdpConfig.EmailBuilder().build(),
-                        new AuthUI.IdpConfig.GoogleBuilder().build());
+            List<AuthUI.IdpConfig> providers = Arrays.asList(
+                    new AuthUI.IdpConfig.EmailBuilder().build(),
+                    new AuthUI.IdpConfig.GoogleBuilder().build());
 
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if (user != null) {
-                    // User is signed in
-                    onSignedInInitialize(user.getDisplayName(), user.getUid());
-                } else {
-                    // User is signed out
-                    onSignedOutCleanup();
-                    startActivityForResult(
-                            AuthUI.getInstance()
-                                    .createSignInIntentBuilder()
-                                    .setIsSmartLockEnabled(false)
-                                    .setAvailableProviders(providers)
-                                    .build(),
-                            RC_SIGN_IN);
-                }
+            FirebaseUser user = firebaseAuth.getCurrentUser();
+            if (user != null) {
+                // User is signed in
+                onSignedInInitialize(user.getDisplayName(), user.getUid());
+            } else {
+                // User is signed out
+                onSignedOutCleanup();
+                startActivityForResult(
+                        AuthUI.getInstance()
+                                .createSignInIntentBuilder()
+                                .setIsSmartLockEnabled(false)
+                                .setAvailableProviders(providers)
+                                .build(),
+                        RC_SIGN_IN);
             }
         };
     }
@@ -271,21 +264,19 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
 
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
 
-                Permissions.check(this/*context*/, Manifest.permission.WRITE_EXTERNAL_STORAGE, null, new PermissionHandler() {
-                    @Override
-                    public void onGranted() {
-                        startActivityForResult(takePictureIntent, RC_PHOTO_PICKER);
-                    }
+            Permissions.check(this/*context*/, Manifest.permission.WRITE_EXTERNAL_STORAGE, null, new PermissionHandler() {
+                @Override
+                public void onGranted() {
+                    startActivityForResult(takePictureIntent, RC_PHOTO_PICKER);
+                }
 
-                    @Override
-                    public void onDenied(Context context, ArrayList<String> deniedPermissions) {
-                        // permission denied, block the feature.
-                        Toast.makeText(TagManagementActivity.this, "You need to grant a permission to attach picture", Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
+                @Override
+                public void onDenied(Context context, ArrayList<String> deniedPermissions) {
+                    // permission denied, block the feature.
+                    Toast.makeText(TagManagementActivity.this, "You need to grant a permission to attach picture", Toast.LENGTH_SHORT).show();
+                }
+            });
 
         }
     }
@@ -293,7 +284,6 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     private void initNFC() {
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
     }
-
 
     private void showWriteFragment() {
         isWrite = true;
@@ -389,27 +379,27 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
         //todo : solve me, always reads DB
         mChildEventListener = new ChildEventListener() {
             @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                Employee employee = dataSnapshot.getValue(Employee.class);
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String s) {
+                // Employee employee = dataSnapshot.getValue(Employee.class);
                 if (mNfcWriteFragment != null) {
                     mNfcWriteFragment.dismiss();
                 }
             }
 
             @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, String s) {
             }
 
             @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
             }
 
             @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, String s) {
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
+            public void onCancelled(@NonNull DatabaseError databaseError) {
             }
         };
         mMessagesDatabaseReference.addChildEventListener(mChildEventListener);
@@ -476,23 +466,4 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
         }
         return null;
     }
-
-    private TextWatcher inputValidation = new TextWatcher(){
-
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-        }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-            mBtWrite.setEnabled(mEtName.getText().toString().length() > 0 && TimesheetUtil.isEmailValid(mEtEmail.getText().toString()));
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-
-        }
-
-    };
 }

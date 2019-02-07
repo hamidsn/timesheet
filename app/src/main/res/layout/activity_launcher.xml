@@ -4,40 +4,40 @@
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
     android:gravity="center"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
     tools:context="com.tag.management.nfc.LauncherActivity">
 
     <Button
         android:id="@+id/btn_management"
+        style="@style/Widget.AppCompat.Button.Colored"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/activity_horizontal_margin"
-        android:text="@string/message_management_tag"
         android:onClick="onManageTagsClick"
-        style="@style/Widget.AppCompat.Button.Colored"/>
+        android:text="@string/message_management_tag" />
 
     <Button
         android:id="@+id/btn_timesheet"
+        style="@style/Widget.AppCompat.Button.Colored"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/btn_management"
         android:layout_marginTop="@dimen/activity_horizontal_margin"
-        android:text="@string/message_timesheet_tag"
         android:onClick="onTimesheetClick"
-        style="@style/Widget.AppCompat.Button.Colored"/>
+        android:text="@string/message_timesheet_tag" />
 
     <Button
         android:id="@+id/btn_report"
+        style="@style/Widget.AppCompat.Button.Colored"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/btn_timesheet"
         android:layout_marginTop="@dimen/activity_horizontal_margin"
-        android:text="@string/message_report_tag"
         android:onClick="onReportClick"
-        style="@style/Widget.AppCompat.Button.Colored"/>
+        android:text="@string/message_report_tag" />
 
 </RelativeLayout>

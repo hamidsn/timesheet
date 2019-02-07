@@ -26,12 +26,12 @@ import java.io.IOException;
 public class NFCReadFragment extends DialogFragment {
 
     public static final String TAG = NFCReadFragment.class.getSimpleName();
+    private static final String HELLO = "Hello, welcome back";
+    private static final String BYE = "Bye, see you soon.";
     private TextView mTvMessage;
     private Listener fragmentDisplayedListener;
     private StaffListener staffNameListener;
     private AppDatabase employeeListDb;
-    private static final String HELLO = "Hello, welcome back";
-    private static final String BYE = "Bye, see you soon.";
 
     public static NFCReadFragment newInstance() {
 
@@ -50,7 +50,7 @@ public class NFCReadFragment extends DialogFragment {
 
     private void initViews(View view) {
 
-        mTvMessage = (TextView) view.findViewById(R.id.tv_message);
+        mTvMessage = view.findViewById(R.id.tv_message);
     }
 
     @Override
@@ -98,7 +98,7 @@ public class NFCReadFragment extends DialogFragment {
         }
     }
 
-    public String returnStaffName(Ndef ndef) {
+/*    public String returnStaffName(Ndef ndef) {
         String staffName = "";
         try {
             String message = getNdefMessage(ndef);
@@ -112,7 +112,7 @@ public class NFCReadFragment extends DialogFragment {
             e.printStackTrace();
             return (staffName);
         }
-    }
+    }*/
 
     private void readFromNFCStaff(Ndef ndef) {
         try {
@@ -124,24 +124,24 @@ public class NFCReadFragment extends DialogFragment {
                 String name = TimesheetUtil.getStaffName(message);
                 String uId = TimesheetUtil.getStaffUniqueId(message);
                 String employer = TimesheetUtil.getEmployer(message);
-                AppExecutors.getInstance().diskIO().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        boolean availability;
-                        if (employeeListDb.employeeDao().loadEmployeeByUid(uId) != null) {
-                            availability = employeeListDb.employeeDao().loadEmployeeByUid(uId).isEmployeeAvailable();
-                        } else {
-                            availability = true;
-                        }
+                AppExecutors.getInstance().diskIO().execute(() -> {
+                    boolean availability;
+                    if (employeeListDb.employeeDao().loadEmployeeByUid(uId) != null) {
+                        availability = employeeListDb.employeeDao().loadEmployeeByUid(uId).isEmployeeAvailable();
+                    } else {
+                        availability = true;
+                    }
+                    if(getView() != null) {
                         Snackbar snackbar = Snackbar
                                 .make(getView(), (!availability ? HELLO : BYE), Snackbar.LENGTH_LONG);
                         View snackbarView = snackbar.getView();
                         snackbarView.setBackgroundColor(Color.WHITE);
-                        TextView textView = (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
+                        TextView textView = snackbarView.findViewById(android.support.design.R.id.snackbar_text);
                         textView.setTextColor(!availability ? Color.DKGRAY : Color.GRAY);
                         textView.setGravity(Gravity.CENTER);
                         snackbar.show();
                     }
+
                 });
 
                 mTvMessage.setText(TimesheetUtil.parseNFCMessageStaff(message));
