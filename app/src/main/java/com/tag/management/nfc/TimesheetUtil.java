@@ -14,6 +14,7 @@ import com.tag.management.nfc.worker.MidnightDBCleanup;
 
 import java.io.ByteArrayOutputStream;
 import java.text.DateFormat;
+import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -190,5 +191,9 @@ public class TimesheetUtil {
         SharedPreferences pref = context.getSharedPreferences("TimesheetPref", 0); // 0 - for private mode
         @SuppressLint("CommitPrefEdits") SharedPreferences.Editor editor = pref.edit();
         editor.putString("employer_uid", employerUid);
+    }
+
+    public static String getMonth(int month) {
+        return new DateFormatSymbols().getMonths()[month-1];
     }
 }

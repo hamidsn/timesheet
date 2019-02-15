@@ -1,10 +1,14 @@
 package com.tag.management.nfc;
 
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.DatePicker;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
@@ -13,7 +17,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.perf.FirebasePerformance;
 import com.google.firebase.perf.metrics.Trace;
+import com.tag.management.nfc.views.MonthYearPickerDialog;
 
+import java.text.DateFormatSymbols;
 import java.util.Arrays;
 import java.util.List;
 
@@ -23,6 +29,8 @@ public class ReportActivity extends AppCompatActivity {
 
     private static final String ANONYMOUS = "anonymous";
     private static final int RC_SIGN_IN = 1;
+    public static final String CALENDAR_DIVIDER = " / ";
+    public static final String MONTH_YEAR_PICKER_DIALOG = "MonthYearPickerDialog";
     //firebase instance variables
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
@@ -110,8 +118,21 @@ public class ReportActivity extends AppCompatActivity {
     }
 
     private void initView() {
+        EditText etPickADate;
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show());
+
+        MonthYearPickerDialog pickerDialog = new MonthYearPickerDialog();
+        etPickADate = findViewById(R.id.et_datePicker);
+        etPickADate.setOnClickListener(arg0 -> pickerDialog.show(getSupportFragmentManager(), MONTH_YEAR_PICKER_DIALOG));
+
+        pickerDialog.setListener((view, year, month, dayOfMonth) -> {
+            String localYear = Integer.toString(year).substring(2);
+            etPickADate.setText(new StringBuilder()
+                    .append(TimesheetUtil.getMonth(month)).append(CALENDAR_DIVIDER).append(localYear).append(" "));
+        });
+
     }
+
 }

@@ -18,6 +18,8 @@
     <string name="email_pass">Mmalek123</string>
     <string name="email_title">Employee tag registration</string>
 
+    <string name="button_ok">Ok</string>
+    <string name="button_cancel">Cancel</string>
 
     //// launcher activity
     <string name="message_management_tag">manage tags</string>
@@ -25,4 +27,5 @@
     <string name="message_report_tag">Create report</string>
     <string name="title_activity_tag_reader">TagReaderActivity</string>
     <string name="title_activity_report">ReportActivity</string>
+    <string name="select_month">Select A Month</string>
 </resources>
