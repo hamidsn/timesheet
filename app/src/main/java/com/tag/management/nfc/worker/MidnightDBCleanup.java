@@ -22,6 +22,7 @@ import androidx.work.WorkerParameters;
 
 public class MidnightDBCleanup extends Worker {
 
+    public static final String DASH_CHAR = "-";
     // private static final String TIMES = "times";
     private final Context mContext;
     private DailyActivityDatabase dailyActivityDb;
@@ -39,7 +40,13 @@ public class MidnightDBCleanup extends Worker {
     @Override
     public Result doWork() {
 
-        String employerUid = getInputData().getString("employer_uid");
+        String employerUid = getInputData().getString("employer_uid_info");
+        if(employerUid == null || employerUid.isEmpty()){
+            employerUid = TimesheetUtil.getEmployerUid(this.mContext);
+        }
+        if(employerUid.isEmpty()){
+            employerUid = "EMPTYEMPLOYERUID";
+        }
 
         //avoid multiple jobs which seems a bug in the SDK
         if (TimesheetUtil.isDoing) {
@@ -48,10 +55,10 @@ public class MidnightDBCleanup extends Worker {
             TimesheetUtil.isDoing = true;
 
             String fBDbName = TimesheetUtil.getCurrentDateUsingCalendar();
-            fBDbName = fBDbName.replace(".", "-").replace(" ", "-").replace("#", "-").replace("$", "-").replace("[", "-").replace("]", "-");
+            fBDbName = fBDbName.replace(".", DASH_CHAR).replace(" ", DASH_CHAR).replace("#", DASH_CHAR).replace("$", DASH_CHAR).replace("[", DASH_CHAR).replace("]", DASH_CHAR);
             FirebaseDatabase mFirebaseDatabase = FirebaseDatabase.getInstance();
 
-            mMessagesDatabaseReference = mFirebaseDatabase.getReference().child(fBDbName).child("" + (employerUid.isEmpty() ? TimesheetUtil.getEmployerUid(this.mContext) : employerUid));
+            mMessagesDatabaseReference = mFirebaseDatabase.getReference().child(fBDbName).child(employerUid);
 
             // midnight DB clean up
             Log.d("worker", " DB cleaning worker is running");
@@ -73,8 +80,8 @@ public class MidnightDBCleanup extends Worker {
 
                 List<DailyActivityEntry> staff = dailyActivityDb.dailyActivityDao().loadAllEmployees();
                 for (DailyActivityEntry entry : staff) {
-                    int inCounter = entry.getEmployeeTimestampIn().split("-").length;
-                    int outCounter = entry.getEmployeeTimestampOut().split("-").length;
+                    int inCounter = entry.getEmployeeTimestampIn().split(DASH_CHAR).length;
+                    int outCounter = entry.getEmployeeTimestampOut().split(DASH_CHAR).length;
 
                     if (inCounter == outCounter) {
                         // ok to send to fb
@@ -83,7 +90,7 @@ public class MidnightDBCleanup extends Worker {
                         // add midnight to db
                         DailyActivityEntry employee;
                         employee = entry;
-                        employee.setEmployeeTimestampOut(employee.getEmployeeTimestampOut() + "-" + TimesheetUtil.getCurrentTimeUsingCalendar());
+                        employee.setEmployeeTimestampOut(employee.getEmployeeTimestampOut() + DASH_CHAR + TimesheetUtil.getCurrentTimeUsingCalendar());
                         dailyActivityDb.dailyActivityDao().updateEmployee(employee);
 
                     } else {

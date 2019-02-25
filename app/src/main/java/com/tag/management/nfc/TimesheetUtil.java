@@ -38,6 +38,9 @@ public class TimesheetUtil {
     private static final String PATTERN_CURRENT = "EEE d MMM HH:mm";
     private static final String PATTERN_DAY = "EEE dd MMM yyyy";
     private static final String WORKERTAG = "worker_tag";
+    public static final String EMPTY_EMPLOYER_UID = "EMPTY_EMPLOYER_UID";
+    public static final String PREF_EMPLOYER_UID = "pref_employer_uid";
+    public static final String TIMESHEET_PREF = "TimesheetPref";
     public static boolean isDoing = false;
     public static String employerUid = "";
 
@@ -137,7 +140,7 @@ public class TimesheetUtil {
                         TimeUnit.MINUTES)
                         .addTag(WORKERTAG)
                         .setInputData(new Data.Builder()
-                                .putString("employer_uid", TimesheetUtil.getEmployerUid(context))
+                                .putString("employer_uid_info", TimesheetUtil.getEmployerUid(context))
                                 .build());
 
         PeriodicWorkRequest myWork = periodicWorkRequest.build();
@@ -182,15 +185,16 @@ public class TimesheetUtil {
     }
 
     public static String getEmployerUid(Context context) {
-        SharedPreferences pref = context.getSharedPreferences("TimesheetPref", 0);
-        return employerUid == null ? pref.getString("key_name", null) : employerUid;
+        SharedPreferences pref = context.getSharedPreferences(TIMESHEET_PREF, 0);
+        return employerUid.isEmpty() ? pref.getString(PREF_EMPLOYER_UID, EMPTY_EMPLOYER_UID) : employerUid;
     }
 
     static void setEmployerUid(String employerUid, Context context) {
         TimesheetUtil.employerUid = employerUid;
-        SharedPreferences pref = context.getSharedPreferences("TimesheetPref", 0); // 0 - for private mode
-        @SuppressLint("CommitPrefEdits") SharedPreferences.Editor editor = pref.edit();
-        editor.putString("employer_uid", employerUid);
+        SharedPreferences pref = context.getSharedPreferences(TIMESHEET_PREF, 0); // 0 - for private mode
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString(PREF_EMPLOYER_UID, employerUid);
+        editor.apply();
     }
 
     public static String getMonth(int month) {
