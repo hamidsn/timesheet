@@ -7,6 +7,8 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.Patterns;
 
@@ -36,11 +38,17 @@ public class TimesheetUtil {
     private static final String TITLE = "Title";
     private static final String newLine = "\n";
     private static final String PATTERN_CURRENT = "EEE d MMM HH:mm";
-    private static final String PATTERN_DAY = "EEE dd MMM yyyy";
+    private static final String PATTERN_DATE = "EEE dd MMM yyyy";
+    private static final String PATTERN_MONTH = "MM";
+    private static final String PATTERN_DAY = "dd";
+    private static final String PATTERN_YEAR = "yyyy";
     private static final String WORKERTAG = "worker_tag";
+    public static final String DASH_CHAR = "-";
     public static final String EMPTY_EMPLOYER_UID = "EMPTY_EMPLOYER_UID";
+    public static final String EMPLOYER_UID_INFO = "employer_uid_info";
     public static final String PREF_EMPLOYER_UID = "pref_employer_uid";
     public static final String TIMESHEET_PREF = "TimesheetPref";
+    public static final String WRONG_CHILD_NAME_FBDB = "WRONG_CHILD_NAME_FBDB";
     public static boolean isDoing = false;
     public static String employerUid = "";
 
@@ -124,7 +132,28 @@ public class TimesheetUtil {
     public static String getCurrentDateUsingCalendar() {
         Calendar cal = Calendar.getInstance();
         Date date = cal.getTime();
+        @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat(PATTERN_DATE);
+        return dateFormat.format(date);
+    }
+
+    public static String getCurrentMonthUsingCalendar() {
+        Calendar cal = Calendar.getInstance();
+        Date date = cal.getTime();
+        @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat(PATTERN_MONTH);
+        return dateFormat.format(date);
+    }
+
+    public static String getCurrentDayUsingCalendar() {
+        Calendar cal = Calendar.getInstance();
+        Date date = cal.getTime();
         @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat(PATTERN_DAY);
+        return dateFormat.format(date);
+    }
+
+    public static String getCurrentYearUsingCalendar() {
+        Calendar cal = Calendar.getInstance();
+        Date date = cal.getTime();
+        @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat(PATTERN_YEAR);
         return dateFormat.format(date);
     }
 
@@ -140,7 +169,7 @@ public class TimesheetUtil {
                         TimeUnit.MINUTES)
                         .addTag(WORKERTAG)
                         .setInputData(new Data.Builder()
-                                .putString("employer_uid_info", TimesheetUtil.getEmployerUid(context))
+                                .putString(EMPLOYER_UID_INFO, TimesheetUtil.getEmployerUid(context))
                                 .build());
 
         PeriodicWorkRequest myWork = periodicWorkRequest.build();
@@ -199,5 +228,13 @@ public class TimesheetUtil {
 
     public static String getMonth(int month) {
         return new DateFormatSymbols().getMonths()[month-1];
+    }
+
+    @NonNull
+    public static String validateStringFB(String childName) {
+        if(TextUtils.isEmpty(childName)){
+            childName = WRONG_CHILD_NAME_FBDB;
+        }
+        return childName.replace(".", DASH_CHAR).replace(" ", DASH_CHAR).replace("#", DASH_CHAR).replace("$", DASH_CHAR).replace("[", DASH_CHAR).replace("]", DASH_CHAR);
     }
 }

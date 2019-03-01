@@ -20,9 +20,12 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import static com.tag.management.nfc.TimesheetUtil.DASH_CHAR;
+import static com.tag.management.nfc.TimesheetUtil.EMPLOYER_UID_INFO;
+import static com.tag.management.nfc.TimesheetUtil.EMPTY_EMPLOYER_UID;
+
 public class MidnightDBCleanup extends Worker {
 
-    public static final String DASH_CHAR = "-";
     // private static final String TIMES = "times";
     private final Context mContext;
     private DailyActivityDatabase dailyActivityDb;
@@ -40,12 +43,12 @@ public class MidnightDBCleanup extends Worker {
     @Override
     public Result doWork() {
 
-        String employerUid = getInputData().getString("employer_uid_info");
+        String employerUid = getInputData().getString(EMPLOYER_UID_INFO);
         if(employerUid == null || employerUid.isEmpty()){
             employerUid = TimesheetUtil.getEmployerUid(this.mContext);
         }
         if(employerUid.isEmpty()){
-            employerUid = "EMPTYEMPLOYERUID";
+            employerUid = EMPTY_EMPLOYER_UID;
         }
 
         //avoid multiple jobs which seems a bug in the SDK
@@ -53,12 +56,22 @@ public class MidnightDBCleanup extends Worker {
             return Result.failure();
         } else {
             TimesheetUtil.isDoing = true;
-
-            String fBDbName = TimesheetUtil.getCurrentDateUsingCalendar();
-            fBDbName = fBDbName.replace(".", DASH_CHAR).replace(" ", DASH_CHAR).replace("#", DASH_CHAR).replace("$", DASH_CHAR).replace("[", DASH_CHAR).replace("]", DASH_CHAR);
             FirebaseDatabase mFirebaseDatabase = FirebaseDatabase.getInstance();
 
-            mMessagesDatabaseReference = mFirebaseDatabase.getReference().child(fBDbName).child(employerUid);
+            String fBDbMonth = TimesheetUtil.getCurrentMonthUsingCalendar();
+            fBDbMonth = TimesheetUtil.validateStringFB(fBDbMonth);
+
+            String fBDbDay = TimesheetUtil.getCurrentDayUsingCalendar();
+            fBDbDay = TimesheetUtil.validateStringFB(fBDbDay);
+
+            String fBDbYear = TimesheetUtil.getCurrentYearUsingCalendar();
+            fBDbYear = TimesheetUtil.validateStringFB(fBDbYear);
+
+            mMessagesDatabaseReference = mFirebaseDatabase.getReference()
+                    .child(fBDbYear)
+                    .child(fBDbMonth)
+                    .child(fBDbDay)
+                    .child(employerUid);
 
             // midnight DB clean up
             Log.d("worker", " DB cleaning worker is running");
