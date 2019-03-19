@@ -320,8 +320,6 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
 
     @Override
     public void onStaffDetails(String name, String uId, String employer) {
-        Log.d("TAG", name);
-
         //employeeIndividual = new DailyActivityEntry(employer, name,   TimesheetUtil.getCurrentTimeUsingCalendar(), TimesheetUtil.getCurrentTimeUsingCalendar(), uId);
 
         AppExecutors.getInstance().diskIO().execute(() -> {
@@ -329,12 +327,12 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
             boolean availability = false;
             if (dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId) == null) {
                 //new start staff
-                employeeIndividual = new DailyActivityEntry(employer, name, TimesheetUtil.getCurrentTimeUsingCalendar(), "", uId);
+                employeeIndividual = new DailyActivityEntry(System.currentTimeMillis() / 1000L, employer, name, TimesheetUtil.getCurrentTimeUsingCalendar(), "", uId);
                 availability = true;
 
             } else if (TextUtils.isEmpty(dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampOut())) {
                 //finishing staff
-                employeeIndividual = new DailyActivityEntry(employer, name, dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampIn(), TimesheetUtil.getCurrentTimeUsingCalendar(), uId);
+                employeeIndividual = new DailyActivityEntry(System.currentTimeMillis() / 1000L, employer, name, dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampIn(), TimesheetUtil.getCurrentTimeUsingCalendar(), uId);
                 dailyActivityDb.dailyActivityDao().deleteEmployee(dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId));
                 availability = false;
 
@@ -345,11 +343,11 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
 
                 if (inCounter > outCounter) {
                     // returning finishing
-                    employeeIndividual = new DailyActivityEntry(employer, name, dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampIn(), dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampOut() + "-" + TimesheetUtil.getCurrentTimeUsingCalendar(), uId);
+                    employeeIndividual = new DailyActivityEntry(System.currentTimeMillis() / 1000L, employer, name, dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampIn(), dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampOut() + "-" + TimesheetUtil.getCurrentTimeUsingCalendar(), uId);
                     availability = false;
                 } else {
                     // returning start
-                    employeeIndividual = new DailyActivityEntry(employer, name, dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampIn() + "-" + TimesheetUtil.getCurrentTimeUsingCalendar(), dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampOut(), uId);
+                    employeeIndividual = new DailyActivityEntry(System.currentTimeMillis() / 1000L, employer, name, dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampIn() + "-" + TimesheetUtil.getCurrentTimeUsingCalendar(), dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId).getEmployeeTimestampOut(), uId);
                     availability = true;
                 }
                 dailyActivityDb.dailyActivityDao().deleteEmployee(dailyActivityDb.dailyActivityDao().loadEmployeeByUid(uId));

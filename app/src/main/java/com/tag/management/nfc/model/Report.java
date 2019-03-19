@@ -1,58 +1,47 @@
-package com.tag.management.nfc.database;
+package com.tag.management.nfc.model;
 
+import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
-@Entity(tableName = "dailyactivity")
-public class DailyActivityEntry {
+@Entity(tableName = "report")
+public class Report {
 
-    @PrimaryKey()
-    @NonNull
-    private long id;
-    private String employerName;
+    // @PrimaryKey(autoGenerate = true)
+    // private int id;
+
+    @ColumnInfo(name = "employeeFullName")
     private String employeeFullName;
+
+     @ColumnInfo(name = "employeeTimestampIn")
     private String employeeTimestampIn;
+
+    @ColumnInfo(name = "employeeTimestampOut")
     private String employeeTimestampOut;
+
+    @ColumnInfo(name = "employeeUniqueId")
     private String employeeUniqueId;
 
-   /* @Ignore
-    public DailyActivityEntry(String employerName, String employeeFullName, String employeeTimestampIn, String employeeTimestampOut, String employeeUniqueId) {
-        this.employerName = employerName;
+    @ColumnInfo(name = "employerName")
+    private String employerName;
+
+    @PrimaryKey
+    @NonNull
+    @ColumnInfo(name = "id")
+    private long id;
+
+    public Report(String employeeFullName, String employeeTimestampIn, String employeeTimestampOut, String employeeUniqueId, String employerName, long id) {
         this.employeeFullName = employeeFullName;
         this.employeeTimestampIn = employeeTimestampIn;
         this.employeeTimestampOut = employeeTimestampOut;
         this.employeeUniqueId = employeeUniqueId;
-    }*/
-
-    public DailyActivityEntry(long id, String employerName, String employeeFullName, String employeeTimestampIn, String employeeTimestampOut, String employeeUniqueId) {
-        this.id = id;
         this.employerName = employerName;
-        this.employeeFullName = employeeFullName;
-        this.employeeTimestampIn = employeeTimestampIn;
-        this.employeeTimestampOut = employeeTimestampOut;
-        this.employeeUniqueId = employeeUniqueId;
-    }
-
-    @Ignore
-    public DailyActivityEntry() {
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
         this.id = id;
     }
 
-    public String getEmployerName() {
-        return employerName;
-    }
-
-    public void setEmployerName(String employerName) {
-        this.employerName = employerName;
+    public Report() {
     }
 
     public String getEmployeeFullName() {
@@ -87,4 +76,19 @@ public class DailyActivityEntry {
         this.employeeUniqueId = employeeUniqueId;
     }
 
+    public String getEmployerName() {
+        return employerName;
+    }
+
+    public void setEmployerName(String employerName) {
+        this.employerName = employerName;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
 }

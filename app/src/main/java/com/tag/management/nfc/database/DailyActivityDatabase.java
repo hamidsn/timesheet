@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
-@Database(entities = {DailyActivityEntry.class}, version = 12, exportSchema = false)
+@Database(entities = {DailyActivityEntry.class}, version = 13, exportSchema = false)
 public abstract class DailyActivityDatabase extends RoomDatabase {
 
     private static final String LOG_TAG = DailyActivityDatabase.class.getSimpleName();
