@@ -32,15 +32,18 @@ public abstract class DailyActivityDatabase extends RoomDatabase {
                         .build();
             }
 
+            WorkManager workerInstance = WorkManager.getInstance();
             //run once off workers
             OneTimeWorkRequest midnightWorkRequest =
                     new OneTimeWorkRequest.Builder(MidnightFinder.class)
                             .setInitialDelay(TimesheetUtil.getMillisTillMidnight(), TimeUnit.MILLISECONDS)
+                            //.setInitialDelay(17L, TimeUnit.MINUTES)
                             .build();
-
-            WorkManager.getInstance().enqueue(midnightWorkRequest);
+            Log.d("worker", "running midnight finder with " + TimesheetUtil.getMillisTillMidnight() + " millisec");
+            workerInstance.enqueue(midnightWorkRequest);
 
         }
+
         Log.d(LOG_TAG, "Getting the database instance");
         return sInstance;
     }

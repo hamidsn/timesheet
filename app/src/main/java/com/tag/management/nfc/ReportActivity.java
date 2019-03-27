@@ -1,12 +1,9 @@
 package com.tag.management.nfc;
 
 import android.content.Intent;
-import android.nfc.Tag;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -23,9 +20,9 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseException;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.perf.FirebasePerformance;
 import com.google.firebase.perf.metrics.Trace;
 import com.tag.management.nfc.database.ReportDatabase;
@@ -36,7 +33,6 @@ import com.tag.management.nfc.views.MonthYearPickerDialog;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Spliterator;
 
 import io.fabric.sdk.android.Fabric;
 
@@ -241,28 +237,31 @@ public class ReportActivity extends AppCompatActivity {
         mChildEventListener = new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String s) {
-
+                try {
                     Report report = dataSnapshot.getValue(Report.class);
+                    final ReportEntry employeeIndividual;
+                    if (report != null) {
+                        employeeIndividual = new ReportEntry(report.getEmployeeFullName(), report.getEmployeeTimestampIn(), report.getEmployeeTimestampOut(), report.getEmployeeUniqueId(), report.getEmployerName(), report.getId());
+                        Log.d("report", "" + report.getEmployeeFullName());
+                    } else {
+                        employeeIndividual = new ReportEntry(ERROR, ERROR, ERROR, ERROR, ERROR, 0);
+                    }
 
-                final ReportEntry employeeIndividual;
-                if (report != null) {
-                    employeeIndividual = new ReportEntry(report.getEmployeeFullName(), report.getEmployeeTimestampIn(), report.getEmployeeTimestampOut(), report.getEmployeeUniqueId(), report.getEmployerName(), report.getId());
-                    Log.d("report-", "" + report.getEmployeeFullName());
-                } else {
-                    employeeIndividual = new ReportEntry(ERROR, ERROR, ERROR, ERROR, ERROR, 0);
-                }
-
-                AppExecutors.getInstance().diskIO().execute(() -> {
-
-                    // check if employee is not in DB then add it
                     AppExecutors.getInstance().diskIO().execute(() -> {
 
-                        if(!TextUtils.isEmpty(employeeIndividual.getEmployerName())){
-                            reportListDb.reportDao().insertReport(employeeIndividual);
-                        }
+                        // check if employee is not in DB then add it
+                        AppExecutors.getInstance().diskIO().execute(() -> {
 
+                            if (!TextUtils.isEmpty(employeeIndividual.getEmployerName())) {
+                                reportListDb.reportDao().insertReport(employeeIndividual);
+                            }
+
+                        });
                     });
-                });
+                } catch (DatabaseException e) {
+                    Log.e("report", e.getMessage());
+
+                }
             }
 
             @Override
@@ -304,6 +303,7 @@ public class ReportActivity extends AppCompatActivity {
     }
 
     private void parseInfo() {
+        // first parse multiple time in time out
 
     }
 

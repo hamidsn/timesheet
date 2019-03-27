@@ -43,10 +43,10 @@ public class TimesheetUtil {
     private static final String PATTERN_DAY = "dd";
     private static final String PATTERN_YEAR = "yyyy";
     private static final String WORKERTAG = "worker_tag";
-    public static final String DASH_CHAR = "-";
+    private static final String DASH_CHAR = "-";
     public static final String EMPTY_EMPLOYER_UID = "EMPTY_EMPLOYER_UID";
-    public static final String EMPLOYER_UID_INFO = "employer_uid_info";
-    public static final String PREF_EMPLOYER_UID = "pref_employer_uid";
+    private static final String EMPLOYER_UID_INFO = "employer_uid_info";
+    private static final String PREF_EMPLOYER_UID = "pref_employer_uid";
     public static final String TIMESHEET_PREF = "TimesheetPref";
     public static final String WRONG_CHILD_NAME_FBDB = "WRONG_CHILD_NAME_FBDB";
     public static boolean isDoing = false;
@@ -165,7 +165,7 @@ public class TimesheetUtil {
         PeriodicWorkRequest.Builder periodicWorkRequest =
                 new PeriodicWorkRequest.Builder(
                         MidnightDBCleanup.class,
-                        1430, // 23:50
+                        1430, // means 23:50
                         TimeUnit.MINUTES)
                         .addTag(WORKERTAG)
                         .setInputData(new Data.Builder()
@@ -175,7 +175,6 @@ public class TimesheetUtil {
         PeriodicWorkRequest myWork = periodicWorkRequest.build();
         WorkManager.getInstance().enqueueUniquePeriodicWork(WORKERTAG, ExistingPeriodicWorkPolicy.KEEP, myWork);
     }
-
 
     public static long getMillisTillMidnight() {
         Calendar c = Calendar.getInstance();
