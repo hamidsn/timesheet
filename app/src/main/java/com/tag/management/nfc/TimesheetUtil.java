@@ -160,7 +160,7 @@ public class TimesheetUtil {
     public static void applyDailyWorker(Context context) {
 
         WorkManager.getInstance().cancelAllWorkByTag(WORKERTAG);
-        Log.d("worker", " DB cleaning worker is NOT running");
+        Log.d("worker", " Previous DB cleaning worker is NOT running");
 
         PeriodicWorkRequest.Builder periodicWorkRequest =
                 new PeriodicWorkRequest.Builder(
@@ -173,7 +173,7 @@ public class TimesheetUtil {
                                 .build());
 
         PeriodicWorkRequest myWork = periodicWorkRequest.build();
-        WorkManager.getInstance().enqueueUniquePeriodicWork(WORKERTAG, ExistingPeriodicWorkPolicy.KEEP, myWork);
+        WorkManager.getInstance().enqueue(myWork);
     }
 
     public static long getMillisTillMidnight() {
