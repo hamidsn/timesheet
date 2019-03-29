@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 import com.firebase.ui.auth.AuthUI;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.perf.FirebasePerformance;
@@ -20,7 +21,10 @@ import com.google.firebase.perf.metrics.Trace;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 import io.fabric.sdk.android.Fabric;
 
 
@@ -106,6 +110,8 @@ public class LauncherActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         mFirebaseAuth.addAuthStateListener(mAuthStateListener);
+        Toast.makeText(this, "worker scheduled: " + isWorkScheduled("HAMID"), Toast.LENGTH_SHORT).show();
+
     }
 
     @Override
@@ -140,6 +146,27 @@ public class LauncherActivity extends AppCompatActivity {
     public void onReportClick(View v) {
         Intent intent = new Intent(this, ReportActivity.class);
         startActivity(intent);
+    }
+
+//testing
+    private boolean isWorkScheduled(String tag) {
+        WorkManager instance = WorkManager.getInstance();
+        ListenableFuture<List<WorkInfo>> statuses = instance.getWorkInfosByTag(tag);
+        try {
+            boolean running = false;
+            List<WorkInfo> workInfoList = statuses.get();
+            for (WorkInfo workInfo : workInfoList) {
+                WorkInfo.State state = workInfo.getState();
+                running = (state == WorkInfo.State.RUNNING | state == WorkInfo.State.ENQUEUED) | running;
+            }
+            return running;
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            return false;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
 }

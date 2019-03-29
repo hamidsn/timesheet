@@ -24,8 +24,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import androidx.work.BackoffPolicy;
 import androidx.work.Data;
 import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
@@ -42,7 +44,7 @@ public class TimesheetUtil {
     private static final String PATTERN_MONTH = "MM";
     private static final String PATTERN_DAY = "dd";
     private static final String PATTERN_YEAR = "yyyy";
-    private static final String WORKERTAG = "worker_tag";
+    private static final String WORKERTAG = "HAMID";
     private static final String DASH_CHAR = "-";
     public static final String EMPTY_EMPLOYER_UID = "EMPTY_EMPLOYER_UID";
     private static final String EMPLOYER_UID_INFO = "employer_uid_info";
@@ -168,22 +170,24 @@ public class TimesheetUtil {
                         1430, // means 23:50
                         TimeUnit.MINUTES)
                         .addTag(WORKERTAG)
+                        .setBackoffCriteria(BackoffPolicy.LINEAR, OneTimeWorkRequest.MIN_BACKOFF_MILLIS, TimeUnit.MILLISECONDS)
                         .setInputData(new Data.Builder()
-                                .putString(EMPLOYER_UID_INFO, TimesheetUtil.getEmployerUid(context))
-                                .build());
+                        .putString(EMPLOYER_UID_INFO, getEmployerUid(context))
+                        .build());
 
         PeriodicWorkRequest myWork = periodicWorkRequest.build();
         WorkManager.getInstance().enqueue(myWork);
+        Log.d("worker", " PeriodicWorkRequest is running for every 20 minutes");
     }
 
-    public static long getMillisTillMidnight() {
+    public static long getMinutesTillMidnight() {
         Calendar c = Calendar.getInstance();
         c.add(Calendar.DATE, 1);
         c.set(Calendar.HOUR_OF_DAY, 0);
         c.set(Calendar.MINUTE, 0);
         c.set(Calendar.SECOND, 0);
         c.set(Calendar.MILLISECOND, 0);
-        return c.getTimeInMillis() - System.currentTimeMillis();
+        return (c.getTimeInMillis() - System.currentTimeMillis()) / 60000;
     }
 
     public static long getAbsoluteMillisTillMidnight() {

@@ -9,8 +9,7 @@ import android.util.Log;
 import com.tag.management.nfc.TimesheetUtil;
 import com.tag.management.nfc.worker.MidnightFinder;
 
-import java.util.concurrent.TimeUnit;
-
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
@@ -36,12 +35,15 @@ public abstract class DailyActivityDatabase extends RoomDatabase {
             //run once off workers
             OneTimeWorkRequest midnightWorkRequest =
                     new OneTimeWorkRequest.Builder(MidnightFinder.class)
-                            .setInitialDelay(TimesheetUtil.getMillisTillMidnight(), TimeUnit.MILLISECONDS)
+                            //.setInitialDelay(TimesheetUtil.getMinutesTillMidnight(), TimeUnit.MINUTES)
                             //.setInitialDelay(17L, TimeUnit.MINUTES)
                             .build();
-            Log.d("worker", "running midnight finder with " + TimesheetUtil.getMillisTillMidnight() + " millisec");
-            workerInstance.enqueue(midnightWorkRequest);
-
+            Log.d("worker", "running midnight finder with " + TimesheetUtil.getMinutesTillMidnight() + " Minutes");
+            try {
+                workerInstance.enqueueUniqueWork("HAMID", ExistingWorkPolicy.REPLACE, midnightWorkRequest);
+            } catch (Exception e) {
+                Log.d("worker", "error");
+            }
         }
 
         Log.d(LOG_TAG, "Getting the database instance");

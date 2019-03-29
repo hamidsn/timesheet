@@ -42,6 +42,7 @@ public class MidnightDBCleanup extends Worker {
     @Override
     public Result doWork() {
 
+        Log.d("worker", " DB cleaning worker is started");
         String employerUid = getInputData().getString(EMPLOYER_UID_INFO);
         if(employerUid == null || employerUid.isEmpty()){
             employerUid = TimesheetUtil.getEmployerUid(this.mContext);
@@ -49,6 +50,7 @@ public class MidnightDBCleanup extends Worker {
         if(employerUid.isEmpty()){
             employerUid = EMPTY_EMPLOYER_UID;
         }
+        Log.d("worker", " employerUid = " + employerUid);
 
         //avoid multiple jobs which seems a bug in the SDK
         if (TimesheetUtil.isDoing) {
@@ -81,7 +83,7 @@ public class MidnightDBCleanup extends Worker {
                 //run once off workers
                 OneTimeWorkRequest midnightWorkRequest =
                         new OneTimeWorkRequest.Builder(MidnightFinder.class)
-                                .setInitialDelay(TimesheetUtil.getMillisTillMidnight(), TimeUnit.MILLISECONDS)
+                                .setInitialDelay(TimesheetUtil.getMinutesTillMidnight(), TimeUnit.MINUTES)
                                 .build();
                 TimesheetUtil.isDoing = false;
                 WorkManager.getInstance().enqueue(midnightWorkRequest);
