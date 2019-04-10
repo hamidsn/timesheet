@@ -12,7 +12,9 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.Patterns;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.tag.management.nfc.worker.MidnightDBCleanup;
+import com.tag.management.nfc.worker.MidnightFinder;
 
 import java.io.ByteArrayOutputStream;
 import java.text.DateFormat;
@@ -20,6 +22,8 @@ import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,8 +31,10 @@ import java.util.regex.Pattern;
 import androidx.work.BackoffPolicy;
 import androidx.work.Data;
 import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
 public class TimesheetUtil {
@@ -44,7 +50,7 @@ public class TimesheetUtil {
     private static final String PATTERN_MONTH = "MM";
     private static final String PATTERN_DAY = "dd";
     private static final String PATTERN_YEAR = "yyyy";
-    private static final String WORKERTAG = "HAMID";
+    public static final String WORKERTAG = "HAMID";
     private static final String DASH_CHAR = "-";
     public static final String EMPTY_EMPLOYER_UID = "EMPTY_EMPLOYER_UID";
     private static final String EMPLOYER_UID_INFO = "employer_uid_info";
@@ -161,26 +167,65 @@ public class TimesheetUtil {
 
     public static void applyDailyWorker(Context context) {
 
-        WorkManager.getInstance().cancelAllWorkByTag(WORKERTAG);
-        Log.d("worker", " Previous DB cleaning worker is NOT running");
+        if(!isWorkScheduled(WORKERTAG)) {
 
-        PeriodicWorkRequest.Builder periodicWorkRequest =
-                new PeriodicWorkRequest.Builder(
-                        MidnightDBCleanup.class,
-                        1430, // means 23:50
-                        TimeUnit.MINUTES)
-                        .addTag(WORKERTAG)
-                        .setBackoffCriteria(BackoffPolicy.LINEAR, OneTimeWorkRequest.MIN_BACKOFF_MILLIS, TimeUnit.MILLISECONDS)
-                        .setInputData(new Data.Builder()
-                        .putString(EMPLOYER_UID_INFO, getEmployerUid(context))
-                        .build());
+            PeriodicWorkRequest.Builder periodicWorkRequest =
+                    new PeriodicWorkRequest.Builder(
+                            MidnightDBCleanup.class,
+                            1440, // mid night - 24 hours from now
+                            TimeUnit.MINUTES)
+                            .addTag(WORKERTAG)
+                            .setBackoffCriteria(BackoffPolicy.LINEAR, OneTimeWorkRequest.MIN_BACKOFF_MILLIS, TimeUnit.MILLISECONDS)
+                            .setInputData(new Data.Builder()
+                                    .putString(EMPLOYER_UID_INFO, getEmployerUid(context))
+                                    .build());
 
-        PeriodicWorkRequest myWork = periodicWorkRequest.build();
-        WorkManager.getInstance().enqueue(myWork);
-        Log.d("worker", " PeriodicWorkRequest is running for every 20 minutes");
+            PeriodicWorkRequest myWork = periodicWorkRequest.build();
+            WorkManager.getInstance().enqueue(myWork);
+            Log.d("worker", " PeriodicWorkRequest is running for every day- 1440 minutes");
+
+        } else {
+            Log.d("worker", " A worker with HAMID tag is already scheduled");
+        }
     }
 
-    public static long getMinutesTillMidnight() {
+    public static void applyOnceoffWorker(){
+        WorkManager workerInstance = WorkManager.getInstance();
+        //run once off workers
+        OneTimeWorkRequest midnightWorkRequest =
+                new OneTimeWorkRequest.Builder(MidnightFinder.class)
+                        .setInitialDelay(getMinutesTillMidnight(), TimeUnit.MINUTES)
+                        //.setInitialDelay(17L, TimeUnit.MINUTES)
+                        .build();
+        Log.d("worker", "running midnight finder with " + getMinutesTillMidnight() + " Minutes");
+        try {
+            workerInstance.enqueueUniqueWork(WORKERTAG, ExistingWorkPolicy.REPLACE, midnightWorkRequest);
+        } catch (Exception e) {
+            Log.d("worker", "error" + e.getMessage());
+        }
+    }
+
+    private static boolean isWorkScheduled(String tag) {
+        WorkManager instance = WorkManager.getInstance();
+        ListenableFuture<List<WorkInfo>> statuses = instance.getWorkInfosByTag(tag);
+        try {
+            boolean running = false;
+            List<WorkInfo> workInfoList = statuses.get();
+            for (WorkInfo workInfo : workInfoList) {
+                WorkInfo.State state = workInfo.getState();
+                running = (state == WorkInfo.State.RUNNING | state == WorkInfo.State.ENQUEUED) | running;
+            }
+            return running;
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            return false;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private static long getMinutesTillMidnight() {
         Calendar c = Calendar.getInstance();
         c.add(Calendar.DATE, 1);
         c.set(Calendar.HOUR_OF_DAY, 0);

@@ -15,6 +15,7 @@ import com.tag.management.nfc.database.EmployeeEntry;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.Worker;
@@ -81,12 +82,21 @@ public class MidnightDBCleanup extends Worker {
             if (TimesheetUtil.getAbsoluteMillisTillMidnight() > 3600000) {
                 Log.d("worker", " DB getAbsoluteMillisTillMidnight greater than one hour");
                 //run once off workers
+                WorkManager.getInstance().cancelAllWorkByTag(TimesheetUtil.WORKERTAG);
+                Log.d("worker", " Previous DB cleaning worker is NOT running");
+
+                TimesheetUtil.applyOnceoffWorker();
+                /*WorkManager workerInstance = WorkManager.getInstance();
                 OneTimeWorkRequest midnightWorkRequest =
                         new OneTimeWorkRequest.Builder(MidnightFinder.class)
                                 .setInitialDelay(TimesheetUtil.getMinutesTillMidnight(), TimeUnit.MINUTES)
                                 .build();
                 TimesheetUtil.isDoing = false;
-                WorkManager.getInstance().enqueue(midnightWorkRequest);
+                try {
+                    workerInstance.enqueueUniqueWork("HAMID", ExistingWorkPolicy.REPLACE, midnightWorkRequest);
+                } catch (Exception e) {
+                    Log.d("worker", "error" + e.getMessage());
+                }*/
                 return Result.failure();
 
             } else {
