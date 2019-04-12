@@ -43,7 +43,7 @@ public class MidnightDBCleanup extends Worker {
     @Override
     public Result doWork() {
 
-        Log.d("worker", " DB cleaning worker is started");
+        Log.d("worker:", " DB cleaning worker is started");
         String employerUid = getInputData().getString(EMPLOYER_UID_INFO);
         if(employerUid == null || employerUid.isEmpty()){
             employerUid = TimesheetUtil.getEmployerUid(this.mContext);
@@ -51,7 +51,7 @@ public class MidnightDBCleanup extends Worker {
         if(employerUid.isEmpty()){
             employerUid = EMPTY_EMPLOYER_UID;
         }
-        Log.d("worker", " employerUid = " + employerUid);
+        Log.d("worker:", " employerUid = " + employerUid);
 
         //avoid multiple jobs which seems a bug in the SDK
         if (TimesheetUtil.isDoing) {
@@ -76,16 +76,16 @@ public class MidnightDBCleanup extends Worker {
                     .child(employerUid);
 
             // midnight DB clean up
-            Log.d("worker", " DB cleaning worker is running");
+            Log.d("worker:", " DB cleaning worker is running");
 
             //check if around one hour from midnight
             if (TimesheetUtil.getAbsoluteMillisTillMidnight() > 3600000) {
                 Log.d("worker", " DB getAbsoluteMillisTillMidnight greater than one hour");
                 //run once off workers
-                WorkManager.getInstance().cancelAllWorkByTag(TimesheetUtil.WORKERTAG);
-                Log.d("worker", " Previous DB cleaning worker is NOT running");
+                    //WorkManager.getInstance().cancelAllWorkByTag(TimesheetUtil.WORKERTAG);
+                Log.d("worker", " Previous DB cleaning worker is NOT running - Retrying in 58 mins");
 
-                TimesheetUtil.applyOnceoffWorker();
+                    //TimesheetUtil.applyOnceoffWorker();
                 /*WorkManager workerInstance = WorkManager.getInstance();
                 OneTimeWorkRequest midnightWorkRequest =
                         new OneTimeWorkRequest.Builder(MidnightFinder.class)
@@ -97,26 +97,27 @@ public class MidnightDBCleanup extends Worker {
                 } catch (Exception e) {
                     Log.d("worker", "error" + e.getMessage());
                 }*/
-                return Result.failure();
+                TimesheetUtil.isDoing = false;
+                return Result.retry();
 
             } else {
                 dailyActivityDb = DailyActivityDatabase.getInstance(getApplicationContext());
                 employeeListDb = AppDatabase.getInstance(getApplicationContext());
-                Log.d("worker", " DB getting all staff");
+                Log.d("worker:", " DB getting all staff");
 
                 List<DailyActivityEntry> staff = dailyActivityDb.dailyActivityDao().loadAllEmployees();
                 for (DailyActivityEntry entry : staff) {
                     int inCounter = entry.getEmployeeTimestampIn().split(DASH_CHAR).length;
                     int outCounter = entry.getEmployeeTimestampOut().split(DASH_CHAR).length;
 
-                    Log.d("worker", " DB correcting outCounter");
+                    Log.d("worker:", " DB correcting outCounter");
 
                     if (inCounter == outCounter) {
                         // ok to send to fb
 
                     } else if (inCounter > outCounter) {
                         // add midnight to db
-                        Log.d("worker", " DB add midnight to db");
+                        Log.d("worker:", " DB add midnight to db");
                         DailyActivityEntry employee;
                         employee = entry;
                         employee.setEmployeeTimestampOut(employee.getEmployeeTimestampOut() + DASH_CHAR + TimesheetUtil.getCurrentTimeUsingCalendar());
@@ -126,7 +127,7 @@ public class MidnightDBCleanup extends Worker {
                         Log.e("MidnightDBCleanup", "Wrong info in daily activity DB");
                     }
                 }
-                Log.d("worker", " DB uploading to firebase");
+                Log.d("worker:", " DB uploading to firebase");
                 uploadStaffFB(staff);
                 return Result.success();
             }
@@ -135,17 +136,17 @@ public class MidnightDBCleanup extends Worker {
 
     private void uploadStaffFB(List<DailyActivityEntry> staff) {
         for (DailyActivityEntry entry : staff) {
-            Log.d("worker", " pushing db to fb");
+            Log.d("worker:", " pushing db to fb");
             mMessagesDatabaseReference.push().setValue(entry);
             updateStaffAvailability(entry.getEmployeeUniqueId(), false);
             dailyActivityDb.dailyActivityDao().deleteEmployee(entry);
         }
-        Log.d("worker", " DB pushed to firebase");
+        Log.d("worker:", " DB pushed to firebase");
         TimesheetUtil.isDoing = false;
     }
 
     private void updateStaffAvailability(String uId, boolean availability) {
-        Log.d("worker", " DB availability update");
+        Log.d("worker:", " DB availability update");
         if (employeeListDb.employeeDao().loadEmployeeByUid(uId) != null) {
             EmployeeEntry employee;
             employee = employeeListDb.employeeDao().loadEmployeeByUid(uId);

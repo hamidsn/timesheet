@@ -23,11 +23,15 @@ public class MidnightFinder extends Worker {
     @Override
     public Result doWork() {
         // midnight DB clean up
-        Log.d("worker", "midnight finder worker is running");
+        Log.d("worker:", "midnight finder worker is running");
+        try {
+            TimesheetUtil.applyDailyWorker(this.mContext);
 
-        TimesheetUtil.applyDailyWorker(this.mContext);
-
-        return Result.success();
+            return Result.success();
+        } catch (Exception e) {
+            Log.d("worker:", "error - onceoff worker - " + e.getMessage());
+            return Result.retry();
+        }
     }
 
 }

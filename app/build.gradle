@@ -69,7 +69,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-auth:16.0.1'
     implementation 'com.google.firebase:firebase-firestore:17.1.1'
     // Firebase messaging
-    implementation 'com.google.firebase:firebase-messaging:10.2.1'
+    implementation 'com.google.firebase:firebase-messaging:17.6.0'
     // Firebase config
     implementation 'com.google.firebase:firebase-config:16.1.0'
     //Firebase performance

@@ -30,7 +30,6 @@ import java.util.regex.Pattern;
 
 import androidx.work.BackoffPolicy;
 import androidx.work.Data;
-import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
@@ -38,6 +37,11 @@ import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
 public class TimesheetUtil {
+    public static final String WORKERTAG = "HAMID";
+    public static final String WORKER_ONCE_TAG = "HAMIDONCE";
+    public static final String EMPTY_EMPLOYER_UID = "EMPTY_EMPLOYER_UID";
+    public static final String TIMESHEET_PREF = "TimesheetPref";
+    public static final String WRONG_CHILD_NAME_FBDB = "WRONG_CHILD_NAME_FBDB";
     private static final String PATTERN_REGISTRATION = "MM/dd/yyyy";
     private static final String EMPLOYEE = "Employee: ";
     private static final String WRONG_TAG = "Tag read error";
@@ -50,13 +54,9 @@ public class TimesheetUtil {
     private static final String PATTERN_MONTH = "MM";
     private static final String PATTERN_DAY = "dd";
     private static final String PATTERN_YEAR = "yyyy";
-    public static final String WORKERTAG = "HAMID";
     private static final String DASH_CHAR = "-";
-    public static final String EMPTY_EMPLOYER_UID = "EMPTY_EMPLOYER_UID";
     private static final String EMPLOYER_UID_INFO = "employer_uid_info";
     private static final String PREF_EMPLOYER_UID = "pref_employer_uid";
-    public static final String TIMESHEET_PREF = "TimesheetPref";
-    public static final String WRONG_CHILD_NAME_FBDB = "WRONG_CHILD_NAME_FBDB";
     public static boolean isDoing = false;
     public static String employerUid = "";
 
@@ -167,7 +167,7 @@ public class TimesheetUtil {
 
     public static void applyDailyWorker(Context context) {
 
-        if(!isWorkScheduled(WORKERTAG)) {
+        if (!isWorkScheduled(WORKERTAG)) {
 
             PeriodicWorkRequest.Builder periodicWorkRequest =
                     new PeriodicWorkRequest.Builder(
@@ -175,33 +175,39 @@ public class TimesheetUtil {
                             1440, // mid night - 24 hours from now
                             TimeUnit.MINUTES)
                             .addTag(WORKERTAG)
-                            .setBackoffCriteria(BackoffPolicy.LINEAR, OneTimeWorkRequest.MIN_BACKOFF_MILLIS, TimeUnit.MILLISECONDS)
+                            .setBackoffCriteria(BackoffPolicy.LINEAR, 58, TimeUnit.MINUTES)
                             .setInputData(new Data.Builder()
                                     .putString(EMPLOYER_UID_INFO, getEmployerUid(context))
                                     .build());
 
             PeriodicWorkRequest myWork = periodicWorkRequest.build();
             WorkManager.getInstance().enqueue(myWork);
-            Log.d("worker", " PeriodicWorkRequest is running for every day- 1440 minutes");
+            Log.d("worker:", " PeriodicWorkRequest is running for every day- 1440 minutes");
 
         } else {
-            Log.d("worker", " A worker with HAMID tag is already scheduled");
+            Log.d("worker:", " periodic: A worker with HAMID tag is already scheduled");
         }
     }
 
-    public static void applyOnceoffWorker(){
-        WorkManager workerInstance = WorkManager.getInstance();
-        //run once off workers
-        OneTimeWorkRequest midnightWorkRequest =
-                new OneTimeWorkRequest.Builder(MidnightFinder.class)
-                        .setInitialDelay(getMinutesTillMidnight(), TimeUnit.MINUTES)
-                        //.setInitialDelay(17L, TimeUnit.MINUTES)
-                        .build();
-        Log.d("worker", "running midnight finder with " + getMinutesTillMidnight() + " Minutes");
-        try {
-            workerInstance.enqueueUniqueWork(WORKERTAG, ExistingWorkPolicy.REPLACE, midnightWorkRequest);
-        } catch (Exception e) {
-            Log.d("worker", "error" + e.getMessage());
+    public static void applyOnceoffWorker() {
+        if (!isWorkScheduled(WORKER_ONCE_TAG)) {
+            WorkManager workerInstance = WorkManager.getInstance();
+            //run once off workers
+            OneTimeWorkRequest midnightWorkRequest =
+                    new OneTimeWorkRequest.Builder(MidnightFinder.class)
+                            .setInitialDelay(getMinutesTillMidnight(), TimeUnit.MINUTES)
+                            .addTag(WORKER_ONCE_TAG)
+                            .setBackoffCriteria(BackoffPolicy.LINEAR, OneTimeWorkRequest.MIN_BACKOFF_MILLIS, TimeUnit.MILLISECONDS)
+                            //.setInitialDelay(17L, TimeUnit.MINUTES)
+                            .build();
+            Log.d("worker:", "running midnight finder with " + getMinutesTillMidnight() + " Minutes");
+            try {
+                workerInstance.enqueueUniqueWork(WORKER_ONCE_TAG, ExistingWorkPolicy.REPLACE, midnightWorkRequest);
+            } catch (Exception e) {
+                Log.d("worker:", "error" + e.getMessage());
+            }
+        } else {
+            Log.d("worker:", " onceoff: A worker with HAMID tag is already scheduled");
         }
     }
 
@@ -253,8 +259,10 @@ public class TimesheetUtil {
         long absoluteMilis;
 
         if (System.currentTimeMillis() - today.getTimeInMillis() < 3600000) {
+            //after midnight
             absoluteMilis = System.currentTimeMillis() - today.getTimeInMillis();
         } else {
+            //before midnight
             absoluteMilis = tomorrow.getTimeInMillis() - System.currentTimeMillis();
         }
 
@@ -275,12 +283,12 @@ public class TimesheetUtil {
     }
 
     public static String getMonth(int month) {
-        return new DateFormatSymbols().getMonths()[month-1];
+        return new DateFormatSymbols().getMonths()[month - 1];
     }
 
     @NonNull
     public static String validateStringFB(String childName) {
-        if(TextUtils.isEmpty(childName)){
+        if (TextUtils.isEmpty(childName)) {
             childName = WRONG_CHILD_NAME_FBDB;
         }
         return childName.replace(".", DASH_CHAR).replace(" ", DASH_CHAR).replace("#", DASH_CHAR).replace("$", DASH_CHAR).replace("[", DASH_CHAR).replace("]", DASH_CHAR);
