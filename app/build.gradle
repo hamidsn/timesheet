@@ -94,6 +94,8 @@ dependencies {
     // WorkManager
     implementation 'android.arch.work:work-runtime:1.0.0-beta02'
 
+    //calendar
+    implementation 'com.savvi.datepicker:rangepicker:1.2.0'
 }
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.firebase-perf'

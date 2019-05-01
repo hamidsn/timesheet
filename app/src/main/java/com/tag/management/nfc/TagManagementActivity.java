@@ -233,9 +233,9 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
         FirebaseStorage mFirebaseStorage = FirebaseStorage.getInstance();
         mStaffPhotosStorageReference = mFirebaseStorage.getReference().child(STAFF_PHOTOS);
 
-        myTrace.incrementCounter(INIT_NFC);
+        myTrace.incrementMetric(INIT_NFC, 1);
 
-        myTrace.incrementCounter(AUTHENTICATION);
+        myTrace.incrementMetric(AUTHENTICATION, 1);
         mAuthStateListener = firebaseAuth -> {
 
             List<AuthUI.IdpConfig> providers = Arrays.asList(
@@ -353,7 +353,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.sign_out_menu:
-                myTrace.incrementCounter(SIGNOUT);
+                myTrace.incrementMetric(SIGNOUT,1);
                 AuthUI.getInstance().signOut(this);
                 return true;
             default:
@@ -430,7 +430,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
                     NdefRecord ndefRecord = createTextRecord(messageToWrite, employerName, employeeTimeStamp);
                     NdefMessage ndefMessage = new NdefMessage(new NdefRecord[]{ndefRecord});
 
-                    myTrace.incrementCounter(WRITE_2_NFC);
+                    myTrace.incrementMetric(WRITE_2_NFC,1);
                     mNfcWriteFragment = (NFCWriteFragment) getFragmentManager().findFragmentByTag(NFCWriteFragment.TAG);
 
 
@@ -442,7 +442,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
 
                 } else {
 
-                    myTrace.incrementCounter(READ_FROM_NFC);
+                    myTrace.incrementMetric(READ_FROM_NFC,1);
                     mNfcReadFragment = (NFCReadFragment) getFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
                     Ndef ndef = Ndef.get(tag);
                     mNfcReadFragment.onNfcDetectedManager(ndef);

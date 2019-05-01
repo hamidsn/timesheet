@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 
 import androidx.work.BackoffPolicy;
 import androidx.work.Data;
+import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
@@ -49,7 +50,7 @@ public class TimesheetUtil {
     private static final String REGISTEREDAT = "Registered at ";
     private static final String TITLE = "Title";
     private static final String newLine = "\n";
-    private static final String PATTERN_CURRENT = "EEE d MMM HH:mm";
+    private static final String PATTERN_CURRENT = "EEE dd MMM HH:mm";
     private static final String PATTERN_DATE = "EEE dd MMM yyyy";
     private static final String PATTERN_MONTH = "MM";
     private static final String PATTERN_DAY = "dd";
@@ -175,13 +176,13 @@ public class TimesheetUtil {
                             1440, // mid night - 24 hours from now
                             TimeUnit.MINUTES)
                             .addTag(WORKERTAG)
-                            .setBackoffCriteria(BackoffPolicy.LINEAR, 58, TimeUnit.MINUTES)
+                            .setBackoffCriteria(BackoffPolicy.LINEAR, 5, TimeUnit.MINUTES) // should be 60
                             .setInputData(new Data.Builder()
                                     .putString(EMPLOYER_UID_INFO, getEmployerUid(context))
                                     .build());
 
             PeriodicWorkRequest myWork = periodicWorkRequest.build();
-            WorkManager.getInstance().enqueue(myWork);
+            WorkManager.getInstance().enqueueUniquePeriodicWork(WORKERTAG, ExistingPeriodicWorkPolicy.KEEP, myWork); //enqueue(myWork);
             Log.d("worker:", " PeriodicWorkRequest is running for every day- 1440 minutes");
 
         } else {

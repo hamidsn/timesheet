@@ -32,8 +32,8 @@ public abstract class DailyActivityDatabase extends RoomDatabase {
                         .fallbackToDestructiveMigration()
                         .build();
             }
-            TimesheetUtil.applyDailyWorker(context);
-                //TimesheetUtil.applyOnceoffWorker();
+            //TimesheetUtil.applyDailyWorker(context);
+                TimesheetUtil.applyOnceoffWorker();
             /*WorkManager workerInstance = WorkManager.getInstance();
             //run once off workers
             OneTimeWorkRequest midnightWorkRequest =

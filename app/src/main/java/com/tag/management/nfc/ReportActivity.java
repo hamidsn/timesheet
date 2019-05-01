@@ -1,6 +1,7 @@
 package com.tag.management.nfc;
 
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -10,7 +11,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
@@ -25,13 +25,16 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.perf.FirebasePerformance;
 import com.google.firebase.perf.metrics.Trace;
+import com.savvi.rangedatepicker.CalendarPickerView;
 import com.tag.management.nfc.database.ReportDatabase;
 import com.tag.management.nfc.database.ReportEntry;
 import com.tag.management.nfc.engine.AppExecutors;
 import com.tag.management.nfc.model.Report;
-import com.tag.management.nfc.views.MonthYearPickerDialog;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import io.fabric.sdk.android.Fabric;
@@ -44,6 +47,7 @@ public class ReportActivity extends AppCompatActivity {
     private static final String ANONYMOUS = "anonymous";
     private static final int RC_SIGN_IN = 1;
     private final String ERROR = "bad_data";
+    Handler handler;
     //firebase instance variables
     private FirebaseAuth mFirebaseAuth;
     private ChildEventListener mChildEventListener;
@@ -55,8 +59,11 @@ public class ReportActivity extends AppCompatActivity {
     private FirebaseDatabase mFirebaseDatabase;
     private String selectedYear = "";
     private String selectedMonth = "";
+    private String selectedDay = "";
     private ReportDatabase reportListDb;
-    Handler handler;
+    private String READ_REPORT_START = "readReportStart";
+    private String READ_REPORT_FINISH = "readReportFinish";
+    private String PARSEINFORMATION = "parseInformation";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,7 +125,7 @@ public class ReportActivity extends AppCompatActivity {
         Fabric.with(this, new Crashlytics());
 
         mFirebaseDatabase = FirebaseDatabase.getInstance();
-       // mMessagesDatabaseReference = mFirebaseDatabase.getReference().child(EMPLOYEES);
+        // mMessagesDatabaseReference = mFirebaseDatabase.getReference().child(EMPLOYEES);
 
         mAuthStateListener = firebaseAuth -> {
             List<AuthUI.IdpConfig> providers = Arrays.asList(
@@ -144,96 +151,57 @@ public class ReportActivity extends AppCompatActivity {
     }
 
     private void initView() {
-        EditText etPickADate;
+        //EditText etPickADate;
+        CalendarPickerView calendar = findViewById(R.id.calendar_view);
 
+        Calendar pastYear = Calendar.getInstance();
+        pastYear.add(Calendar.YEAR, -2);
+        Calendar nextYear = Calendar.getInstance();
+        nextYear.add(Calendar.DATE, 1);
+
+
+        calendar.init(pastYear.getTime(), nextYear.getTime()) //
+                .inMode(CalendarPickerView.SelectionMode.RANGE)
+                .withSelectedDate(new Date());
+        calendar.setTypeface(Typeface.SANS_SERIF);
 
         FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(view -> Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show());
+        fab.setOnClickListener(view ->
+                {
+
+                    myTrace.incrementMetric(READ_REPORT_START, 1);
+                    Snackbar.make(view, "Reading data from server", Snackbar.LENGTH_LONG)
+                            .setAction("Remote handshake", null).show();
+                    List<Date> selectedDays = calendar.getSelectedDates();
+
+                    SimpleDateFormat yFormat = new SimpleDateFormat("yyyy");
+                    SimpleDateFormat mFormat = new SimpleDateFormat("MM");
+                    SimpleDateFormat dFormat = new SimpleDateFormat("dd");
+
+                    int maxDays = selectedDays.size();
+                    for (int dayCounter = 0; dayCounter < maxDays; dayCounter++) {
+                        selectedYear = yFormat.format(selectedDays.get(dayCounter));
+                        selectedMonth = mFormat.format(selectedDays.get(dayCounter));
+                        selectedDay = dFormat.format(selectedDays.get(dayCounter));
+                        if (!TextUtils.isEmpty(employerUid)) {
+                            mMessagesDatabaseReference = mFirebaseDatabase.getReference()
+                                    .child(selectedYear)
+                                    .child(selectedMonth)
+                                    .child(selectedDay)
+                                    .child(employerUid);
+                            attachDatabaseReadListener(dayCounter, maxDays);
+                        }
+                    }
+                }
+        );
 
         reportListDb = ReportDatabase.getInstance(getApplicationContext());
-
-        MonthYearPickerDialog pickerDialog = new MonthYearPickerDialog();
-        etPickADate = findViewById(R.id.et_datePicker);
-        etPickADate.setOnClickListener(arg0 -> pickerDialog.show(getSupportFragmentManager(), MONTH_YEAR_PICKER_DIALOG));
-
-        pickerDialog.setListener((view, year, month, dayOfMonth) -> {
-            selectedYear = Integer.toString(year);
-            selectedMonth = Integer.toString(month);
-            if (month < 10) {
-                selectedMonth = "0" + selectedMonth;
-            }
-            AppExecutors.getInstance().diskIO().execute(() -> {
-                reportListDb.clearAllTables();
-            });
-            findViewById(R.id.loadingPanel).setVisibility(View.GONE);
-            if(handler != null ){
-                handler.removeCallbacksAndMessages(null);
-            }
-
-            if (!TextUtils.isEmpty(employerUid)) {
-                for (int i = 1; i < 32; i++) {
-                    String day = Integer.toString(i);
-                    if (i < 10) {
-                        day = "0" + day;
-                    }
-                    mMessagesDatabaseReference = mFirebaseDatabase.getReference()
-                            .child(selectedYear)
-                            .child(selectedMonth)
-                            .child(day)
-                            .child(employerUid);
-
-                    //readDB(i);
-                    attachDatabaseReadListener(i);
-                }
-            }
-
-            etPickADate.setText(new StringBuilder()
-                    .append(TimesheetUtil.getMonth(month)).append(CALENDAR_DIVIDER).append(selectedYear).append(" "));
-        });
-
     }
 
- /*   private void readDB(int day) {
-        mMessagesDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @RequiresApi(api = Build.VERSION_CODES.N)
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Report report = dataSnapshot.getValue(Report.class);
-
-               // DataSnapshot fdfd = dataSnapshot.child(dataSnapshot.getKey());
-
-                final ReportEntry employeeIndividual;
-                if (report != null) {
-                    employeeIndividual = new ReportEntry(report.getEmployeeFullName(), report.getEmployeeTimestampIn(), report.getEmployeeTimestampOut(), report.getEmployeeUniqueId(), report.getEmployerName(), report.getId());
-                Log.d("report", "" + report.getEmployeeFullName());
-                } else {
-                    employeeIndividual = new ReportEntry(ERROR, ERROR, ERROR, ERROR, ERROR, 0);
-                }
-
-                AppExecutors.getInstance().diskIO().execute(() -> {
-
-                    // check if employee is not in DB then add it
-                    if(employeeIndividual.getEmployeeTimestampIn() != null && !employeeIndividual.getEmployeeTimestampIn().equals(ERROR)){
-                        reportListDb.reportDao().insertReport(employeeIndividual);
-                    }
-
-                });
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-
-    }*/
-
-
-    private void attachDatabaseReadListener(int day) {
-        //todo read fbdb of the day, store it in a local db
-        //it is an array for all days of a month
-
+    private void attachDatabaseReadListener(int day, int maxDays) {
+        if (day == 0) {
+            showSpinner();
+        }
         mChildEventListener = new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String s) {
@@ -260,7 +228,6 @@ public class ReportActivity extends AppCompatActivity {
                     });
                 } catch (DatabaseException e) {
                     Log.e("report", e.getMessage());
-
                 }
             }
 
@@ -283,8 +250,9 @@ public class ReportActivity extends AppCompatActivity {
         mMessagesDatabaseReference.addChildEventListener(mChildEventListener);
         mMessagesDatabaseReference.keepSynced(false);
 
-        if(day == 31){
-            showSpinner();
+        if (day == maxDays - 1) {
+            myTrace.incrementMetric(READ_REPORT_FINISH, 1);
+            hideSpinner();
         }
     }
 
@@ -292,19 +260,25 @@ public class ReportActivity extends AppCompatActivity {
         //10 seconds spinner to make sure data is downloaded from firebase
         findViewById(R.id.loadingPanel).setVisibility(View.VISIBLE);
 
-
-        handler.postDelayed(new Runnable() {
-            public void run() {
-                findViewById(R.id.loadingPanel).setVisibility(View.GONE);
-                parseInfo();
-            }
+        handler.postDelayed(() -> {
+            findViewById(R.id.loadingPanel).setVisibility(View.GONE);
+            parseInfo();
         }, 10000);
 
     }
 
-    private void parseInfo() {
-        // first parse multiple time in time out
+    private void hideSpinner() {
+        findViewById(R.id.loadingPanel).setVisibility(View.GONE);
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+        }
+    }
 
+    private void parseInfo() {
+        myTrace.incrementMetric(PARSEINFORMATION, 1);
+        //todo create report, sort by name
+        // first parse multiple time in time out
+        //      List<ReportEntry> g = reportListDb.reportDao().loadAllReports();
     }
 
     private void detachDatabaseReadListener() {
@@ -314,5 +288,10 @@ public class ReportActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        myTrace.stop();
+    }
 
 }

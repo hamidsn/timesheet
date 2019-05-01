@@ -1,22 +1,24 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-    This layout defines the main activity screen and displays a listtaskEntriesasks (if they exist),
-    and a floating action button that launches another activity.
--->
+<?xml version="1.0" encoding="utf-8"?>
+
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <EditText
-        android:id="@+id/et_datePicker"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:gravity="center_horizontal"
-        android:cursorVisible="false"
-        android:layout_margin="@dimen/fab_margin"
-        android:hint="@string/select_month"
-        android:inputType="date" />
+    <com.savvi.rangedatepicker.CalendarPickerView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/calendar_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:paddingBottom="16dp"
+        android:scrollbarStyle="outsideOverlay"
+        android:clipToPadding="false"
+        app:tsquare_dividerColor="@color/calendar_divider"
+        app:tsquare_headerTextColor="@color/fui_bgEmail"
+        />
 
     <RelativeLayout
         android:id="@+id/loadingPanel"

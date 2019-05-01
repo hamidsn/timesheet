@@ -46,7 +46,7 @@ import static android.support.v7.widget.DividerItemDecoration.VERTICAL;
 
 public class TagReaderActivity extends AppCompatActivity implements Listener, StaffListener, EmployeeAdapter.ItemClickListener {
 
-    public static final String READ_FROM_NFC = "readFromNfc";
+    private static final String READ_FROM_NFC = "readFromNfc";
     //public static final String DATA = "data";
     public static final String EMPLOYEES = "employees";
     public static final String INSTANCE_TASK_ID = "instanceTaskId";
@@ -54,7 +54,6 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
     private static final int RC_SIGN_IN = 1;
     // Constant for default task id to be used when not in update mode
     private static final int DEFAULT_TASK_ID = -1;
-    private final String STARTUP_TRACE_NAME = "nfc_launcher_trace";
     private final String ERROR = "bad_data";
     //firebase instance variables
     private FirebaseAuth mFirebaseAuth;
@@ -69,6 +68,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
     private DatabaseReference mMessagesDatabaseReference;
     private ChildEventListener mChildEventListener;
     private int mTaskId = DEFAULT_TASK_ID;
+    private static final String READ_STAFF_FROM_FB = "readStaffFromFb";
 
     private EmployeeAdapter mAdapter;
 
@@ -141,7 +141,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
         if (tag != null) {
 
             if (isDialogDisplayed) {
-                myTrace.incrementCounter(READ_FROM_NFC);
+                myTrace.incrementMetric(READ_FROM_NFC,1);
                 mNfcReadFragment = (NFCReadFragment) getFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
                 Ndef ndef = Ndef.get(tag);
 
@@ -163,6 +163,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
         //todo: are we used?
         employerName = ANONYMOUS;
         employerUid = ANONYMOUS;
+        String STARTUP_TRACE_NAME = "nfc_launcher_trace";
         myTrace = FirebasePerformance.getInstance().newTrace(STARTUP_TRACE_NAME);
         myTrace.start();
         Fabric.with(this, new Crashlytics());
@@ -258,6 +259,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
     }
 
     private void attachDatabaseReadListener() {
+        myTrace.incrementMetric(READ_STAFF_FROM_FB,1);
         mChildEventListener = new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String s) {
@@ -356,5 +358,11 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
             dailyActivityDb.dailyActivityDao().insertEmployee(employeeIndividual);
         });
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        myTrace.stop();
     }
 }

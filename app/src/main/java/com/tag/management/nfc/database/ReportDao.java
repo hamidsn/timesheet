@@ -12,7 +12,7 @@ import java.util.List;
 @Dao
 public interface ReportDao {
 
-    @Query("SELECT * FROM report ORDER BY id")
+    @Query("SELECT * FROM report ORDER BY employeeFullName")
     List<ReportEntry> loadAllReports();
 
     @Insert
