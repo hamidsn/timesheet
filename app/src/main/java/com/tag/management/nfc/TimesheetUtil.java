@@ -13,6 +13,7 @@ import android.util.Log;
 import android.util.Patterns;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.tag.management.nfc.database.ReportEntry;
 import com.tag.management.nfc.worker.MidnightDBCleanup;
 import com.tag.management.nfc.worker.MidnightFinder;
 
@@ -20,6 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -293,5 +295,37 @@ public class TimesheetUtil {
             childName = WRONG_CHILD_NAME_FBDB;
         }
         return childName.replace(".", DASH_CHAR).replace(" ", DASH_CHAR).replace("#", DASH_CHAR).replace("$", DASH_CHAR).replace("[", DASH_CHAR).replace("]", DASH_CHAR);
+    }
+
+    public static List<ReportEntry> filterStaffTimetable(List<ReportEntry> staff) {
+        List<ReportEntry> mFinalList = new ArrayList<>();
+
+        for(int i = 0; i< staff.size(); i++){
+            Log.d("report=====", "* " + staff.get(i).getEmployeeFullName());
+            Log.d("report=====", "* " + staff.get(i).getId());
+            Log.d("report=====", "* " + staff.get(i).getEmployeeTimestampIn());
+            Log.d("report=====", "* " + staff.get(i).getEmployeeTimestampOut());
+            Log.d("report=====", "* ******");
+            if(staff.get(i).getEmployeeTimestampIn().contains("-")){
+                String[] splittedTimestampIn = staff.get(i).getEmployeeTimestampIn().split("-");
+                String[] splittedTimestampOut = staff.get(i).getEmployeeTimestampOut().split("-");
+                for(int j=0;j<splittedTimestampIn.length;j++){
+                    staff.add(new ReportEntry(staff.get(i).getEmployeeFullName(), splittedTimestampIn[j], splittedTimestampOut[j], staff.get(i).getEmployeeUniqueId(), staff.get(i).getEmployerName(), staff.get(i).getId()));
+                }
+            }
+        }
+
+        for (ReportEntry person : staff) {
+            if(!person.getEmployeeTimestampIn().contains("-")){
+                mFinalList.add(person);
+
+                Log.d("report=", "* " + person.getEmployeeFullName());
+                Log.d("report=", "* " + person.getId());
+                Log.d("report=", "* " + person.getEmployeeTimestampIn());
+                Log.d("report=", "* " + person.getEmployeeTimestampOut());
+                Log.d("report=", "* ******");
+            }
+        }
+        return mFinalList;
     }
 }

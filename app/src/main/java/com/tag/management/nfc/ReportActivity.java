@@ -3,7 +3,6 @@ package com.tag.management.nfc;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -15,6 +14,7 @@ import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 import com.firebase.ui.auth.AuthUI;
+import com.google.firebase.FirebaseError;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -23,15 +23,18 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseException;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.perf.FirebasePerformance;
 import com.google.firebase.perf.metrics.Trace;
 import com.savvi.rangedatepicker.CalendarPickerView;
+import com.tag.management.nfc.database.DailyActivityEntry;
 import com.tag.management.nfc.database.ReportDatabase;
 import com.tag.management.nfc.database.ReportEntry;
 import com.tag.management.nfc.engine.AppExecutors;
 import com.tag.management.nfc.model.Report;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -47,7 +50,7 @@ public class ReportActivity extends AppCompatActivity {
     private static final String ANONYMOUS = "anonymous";
     private static final int RC_SIGN_IN = 1;
     private final String ERROR = "bad_data";
-    Handler handler;
+   // Handler handler;
     //firebase instance variables
     private FirebaseAuth mFirebaseAuth;
     private ChildEventListener mChildEventListener;
@@ -64,11 +67,16 @@ public class ReportActivity extends AppCompatActivity {
     private String READ_REPORT_START = "readReportStart";
     private String READ_REPORT_FINISH = "readReportFinish";
     private String PARSEINFORMATION = "parseInformation";
+    List<ReportEntry> staff = null;
+    List<ReportEntry> mFinalList = new ArrayList<>();
+    int staffNumber = 0;
+    int downloadedDay = 0;
+    int maxSelectedDays = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        handler = new Handler();
+        //handler = new Handler();
         Fabric.with(this, new Crashlytics());
         setContentView(R.layout.activity_report);
 
@@ -169,6 +177,11 @@ public class ReportActivity extends AppCompatActivity {
         fab.setOnClickListener(view ->
                 {
 
+                    // todo delete old report?
+                    AppExecutors.getInstance().diskIO().execute(() -> reportListDb.reportDao().nukeTable());
+                    staffNumber = 0;
+                    downloadedDay = 0;
+
                     myTrace.incrementMetric(READ_REPORT_START, 1);
                     Snackbar.make(view, "Reading data from server", Snackbar.LENGTH_LONG)
                             .setAction("Remote handshake", null).show();
@@ -178,8 +191,8 @@ public class ReportActivity extends AppCompatActivity {
                     SimpleDateFormat mFormat = new SimpleDateFormat("MM");
                     SimpleDateFormat dFormat = new SimpleDateFormat("dd");
 
-                    int maxDays = selectedDays.size();
-                    for (int dayCounter = 0; dayCounter < maxDays; dayCounter++) {
+                    maxSelectedDays = selectedDays.size();
+                    for (int dayCounter = 0; dayCounter < maxSelectedDays; dayCounter++) {
                         selectedYear = yFormat.format(selectedDays.get(dayCounter));
                         selectedMonth = mFormat.format(selectedDays.get(dayCounter));
                         selectedDay = dFormat.format(selectedDays.get(dayCounter));
@@ -189,13 +202,14 @@ public class ReportActivity extends AppCompatActivity {
                                     .child(selectedMonth)
                                     .child(selectedDay)
                                     .child(employerUid);
-                            attachDatabaseReadListener(dayCounter, maxDays);
+                            attachDatabaseReadListener(dayCounter, maxSelectedDays);
                         }
                     }
                 }
         );
 
         reportListDb = ReportDatabase.getInstance(getApplicationContext());
+
     }
 
     private void attachDatabaseReadListener(int day, int maxDays) {
@@ -210,12 +224,15 @@ public class ReportActivity extends AppCompatActivity {
                     final ReportEntry employeeIndividual;
                     if (report != null) {
                         employeeIndividual = new ReportEntry(report.getEmployeeFullName(), report.getEmployeeTimestampIn(), report.getEmployeeTimestampOut(), report.getEmployeeUniqueId(), report.getEmployerName(), report.getId());
-                        Log.d("report", "" + report.getEmployeeFullName());
+                        Log.d("report", "* " + report.getEmployeeFullName());
+                        Log.d("report", "* " + report.getId());
+                        Log.d("report", "* " + report.getEmployeeTimestampIn());
+                        Log.d("report", "* " + report.getEmployeeTimestampOut());
+                        Log.d("report", "******\n" );
+
                     } else {
                         employeeIndividual = new ReportEntry(ERROR, ERROR, ERROR, ERROR, ERROR, 0);
                     }
-
-                    AppExecutors.getInstance().diskIO().execute(() -> {
 
                         // check if employee is not in DB then add it
                         AppExecutors.getInstance().diskIO().execute(() -> {
@@ -225,7 +242,6 @@ public class ReportActivity extends AppCompatActivity {
                             }
 
                         });
-                    });
                 } catch (DatabaseException e) {
                     Log.e("report", e.getMessage());
                 }
@@ -248,11 +264,33 @@ public class ReportActivity extends AppCompatActivity {
             }
         };
         mMessagesDatabaseReference.addChildEventListener(mChildEventListener);
+
+        mMessagesDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                System.out.println("We're done loading the initial "+dataSnapshot.getChildrenCount()+" items");
+                downloadedDay += 1;
+                staffNumber +=dataSnapshot.getChildrenCount();
+                Log.d("report", "staffNumber:" + staffNumber);
+                Log.d("report", "downloadedDay:" + downloadedDay);
+                Log.d("report", "maxSelectedDays:" + maxSelectedDays);
+                if(downloadedDay == maxSelectedDays){
+                    //we finished downloading the last selected day
+                    parseInfo();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
         mMessagesDatabaseReference.keepSynced(false);
 
         if (day == maxDays - 1) {
             myTrace.incrementMetric(READ_REPORT_FINISH, 1);
             hideSpinner();
+
         }
     }
 
@@ -260,26 +298,37 @@ public class ReportActivity extends AppCompatActivity {
         //10 seconds spinner to make sure data is downloaded from firebase
         findViewById(R.id.loadingPanel).setVisibility(View.VISIBLE);
 
-        handler.postDelayed(() -> {
+       /* handler.postDelayed(() -> {
             findViewById(R.id.loadingPanel).setVisibility(View.GONE);
             parseInfo();
-        }, 10000);
+        }, 10000);*/
 
     }
 
     private void hideSpinner() {
         findViewById(R.id.loadingPanel).setVisibility(View.GONE);
-        if (handler != null) {
+        /*if (handler != null) {
             handler.removeCallbacksAndMessages(null);
-        }
+        }*/
+
     }
 
     private void parseInfo() {
         myTrace.incrementMetric(PARSEINFORMATION, 1);
-        //todo create report, sort by name
+        AppExecutors.getInstance().diskIO().execute(() -> {
+                    staff = reportListDb.reportDao().loadAllReports();
+                    Log.d("report", "* ***** * final staff number" + staff.size());
+
+            mFinalList = TimesheetUtil.filterStaffTimetable(staff);
+
+        });
+
+        //todo create report by mFinalList
         // first parse multiple time in time out
         //      List<ReportEntry> g = reportListDb.reportDao().loadAllReports();
     }
+
+
 
     private void detachDatabaseReadListener() {
         if (mChildEventListener != null) {

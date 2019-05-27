@@ -26,4 +26,7 @@ public interface ReportDao {
 
     @Query("SELECT * FROM report WHERE employeeUniqueId = :employeeUniqueId")
     ReportEntry loadReportByUid(String employeeUniqueId);
+
+    @Query("DELETE FROM report")
+    public void nukeTable();
 }
