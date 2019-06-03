@@ -1,8 +1,11 @@
 package com.tag.management.nfc;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -14,7 +17,6 @@ import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 import com.firebase.ui.auth.AuthUI;
-import com.google.firebase.FirebaseError;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -27,7 +29,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.perf.FirebasePerformance;
 import com.google.firebase.perf.metrics.Trace;
 import com.savvi.rangedatepicker.CalendarPickerView;
-import com.tag.management.nfc.database.DailyActivityEntry;
 import com.tag.management.nfc.database.ReportDatabase;
 import com.tag.management.nfc.database.ReportEntry;
 import com.tag.management.nfc.engine.AppExecutors;
@@ -320,15 +321,19 @@ public class ReportActivity extends AppCompatActivity {
                     Log.d("report", "* ***** * final staff number" + staff.size());
 
             mFinalList = TimesheetUtil.filterStaffTimetable(staff);
-
+            if(mFinalList.isEmpty()){
+                showWrongMessage(this);
+            } else {
+                TimesheetUtil.createHTML(this, mFinalList, employerUid);
+            }
         });
 
-        //todo create report by mFinalList
-        // first parse multiple time in time out
-        //      List<ReportEntry> g = reportListDb.reportDao().loadAllReports();
+        //todo Create html file based on mFinalList
+        //todo store in html file name
+        //todo create folder in fb by employerid
+        //todo upload html
+        //todo show page, share link or print html
     }
-
-
 
     private void detachDatabaseReadListener() {
         if (mChildEventListener != null) {
@@ -343,4 +348,11 @@ public class ReportActivity extends AppCompatActivity {
         myTrace.stop();
     }
 
+    private void showWrongMessage(final Context context)
+    {
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(
+                () -> Toast.makeText(context, "No entry found in cloud. Try other dates", Toast.LENGTH_SHORT).show()
+        );
+    }
 }

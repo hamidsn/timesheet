@@ -12,17 +12,25 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.Patterns;
 
+import com.google.android.gms.tasks.Task;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.tag.management.nfc.database.ReportEntry;
 import com.tag.management.nfc.worker.MidnightDBCleanup;
 import com.tag.management.nfc.worker.MidnightFinder;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -300,23 +308,32 @@ public class TimesheetUtil {
     public static List<ReportEntry> filterStaffTimetable(List<ReportEntry> staff) {
         List<ReportEntry> mFinalList = new ArrayList<>();
 
-        for(int i = 0; i< staff.size(); i++){
+        for (int i = 0; i < staff.size(); i++) {
             Log.d("report=====", "* " + staff.get(i).getEmployeeFullName());
             Log.d("report=====", "* " + staff.get(i).getId());
             Log.d("report=====", "* " + staff.get(i).getEmployeeTimestampIn());
             Log.d("report=====", "* " + staff.get(i).getEmployeeTimestampOut());
             Log.d("report=====", "* ******");
-            if(staff.get(i).getEmployeeTimestampIn().contains("-")){
+            if (staff.get(i).getEmployeeTimestampIn().contains("-")) {
                 String[] splittedTimestampIn = staff.get(i).getEmployeeTimestampIn().split("-");
                 String[] splittedTimestampOut = staff.get(i).getEmployeeTimestampOut().split("-");
-                for(int j=0;j<splittedTimestampIn.length;j++){
+                for (int j = 0; j < splittedTimestampIn.length; j++) {
                     staff.add(new ReportEntry(staff.get(i).getEmployeeFullName(), splittedTimestampIn[j], splittedTimestampOut[j], staff.get(i).getEmployeeUniqueId(), staff.get(i).getEmployerName(), staff.get(i).getId()));
                 }
             }
         }
+        /////
+        Collections.sort(staff, new Comparator<ReportEntry>() {
+
+            @Override
+            public int compare(ReportEntry obj1, ReportEntry obj2) {
+                return obj1.getEmployeeFullName().compareToIgnoreCase(obj2.getEmployeeFullName());
+            }
+        });
+        /////
 
         for (ReportEntry person : staff) {
-            if(!person.getEmployeeTimestampIn().contains("-")){
+            if (!person.getEmployeeTimestampIn().contains("-")) {
                 mFinalList.add(person);
 
                 Log.d("report=", "* " + person.getEmployeeFullName());
@@ -328,4 +345,103 @@ public class TimesheetUtil {
         }
         return mFinalList;
     }
+
+    public static void createHTML(Context context, List<ReportEntry> mFinalList, String employerUid) {
+        String htmlDocument = context.getString(R.string.template1);
+
+        //Clean duplicated names() those with - in timing
+        ArrayList<String> withoutDuplicatedNames = new ArrayList<String>();
+        for (ReportEntry element : mFinalList) {
+            if (!withoutDuplicatedNames.contains(element.getEmployeeFullName())) {
+                withoutDuplicatedNames.add(element.getEmployeeFullName());
+            }
+        }
+
+        //create the html content
+        //todo below < or <=
+        for (int i = 0; i < withoutDuplicatedNames.size(); i++) {
+            htmlDocument += context.getString(R.string.template2).replace("$name", withoutDuplicatedNames.get(i)).replace("$name", withoutDuplicatedNames.get(i));
+
+            //todo same as above
+            for (int j = 0; j < mFinalList.size(); j++) {
+                if (mFinalList.get(j).getEmployeeFullName().equals(withoutDuplicatedNames.get(i))) {
+                    htmlDocument += context.getString(R.string.template3).
+                            replace("$timeIn", mFinalList.get(j).getEmployeeTimestampIn()).
+                            replace("$timeOut", mFinalList.get(j).getEmployeeTimestampOut()).
+                            replace("$Sum", "calculate sum");
+                }
+            }
+            htmlDocument += context.getString(R.string.template4).replace("$totalHours", "CALCULATE ME");
+        }
+        htmlDocument += context.getString(R.string.template5);
+        saveHTMLFile(context, htmlDocument, employerUid);
+
+        Log.d("html", "" + htmlDocument);
+    }
+
+    private static void saveHTMLFile(Context context, String data, String employerUid) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput("timesheet.html", Context.MODE_PRIVATE));
+            outputStreamWriter.write(data);
+            outputStreamWriter.close();
+            //Uri uri = Uri.fromFile(context.getFileStreamPath("timesheet.html"));
+        } catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
+        // send file to firebase
+        StorageReference storageRef = FirebaseStorage.getInstance().getReference().child("timesheets/reports/" + employerUid + "/timesheet.html");
+        Uri file = Uri.fromFile(context.getFileStreamPath("timesheet.html"));
+        UploadTask uploadTask = storageRef.putFile(file);
+        uploadTask.continueWithTask(task -> {
+            if (!task.isSuccessful()) {
+                throw task.getException();
+            }
+
+            // Continue with the task to get the download URL
+            return storageRef.getDownloadUrl();
+        }).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Uri downloadUrl = task.getResult();
+            } else {
+                // Handle failures
+                // ...
+            }
+        });
+    }
+
 }
+
+
+
+
+    /*private static void readFromFile(Context context) {
+        String ret = "";
+
+        try {
+            //todo check file name
+            InputStream inputStream = context.openFileInput("timesheet.html");
+
+            if ( inputStream != null ) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString;
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ( (receiveString = bufferedReader.readLine()) != null ) {
+                    stringBuilder.append(receiveString);
+                }
+
+                inputStream.close();
+                ret = stringBuilder.toString();
+                Log.d("html", ret);
+            }
+        }
+        catch (FileNotFoundException e) {
+            Log.e("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.e("login activity", "Can not read file: " + e.toString());
+        }
+
+    }
+*/
+

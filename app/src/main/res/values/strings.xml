@@ -28,4 +28,69 @@
     <string name="title_activity_tag_reader">TagReaderActivity</string>
     <string name="title_activity_report">ReportActivity</string>
     <string name="select_month">Select A Month</string>
+
+    //// html report
+    <string name="template1"><![CDATA[<!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+    table {
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      width: 90%;
+    }
+
+    td, th {
+      border: 1px solid #dddddd;
+      text-align: center;
+      padding: 8px;
+    }
+
+    tr:nth-child(even) {
+      background-color: #cccccc;
+    }
+    </style>
+    </head>
+    <body>
+
+    <h2>Report - from to to</h2>]]>
+</string>
+
+    <string name="template2"><![CDATA[<table>
+    <caption>$name</caption>
+
+    <tr>
+        <th>Time in</th>
+        <th>Time out</th>
+        <th>Sum</th>
+    </tr>
+
+    ]]>
+</string>
+
+    <string name="template3"><![CDATA[
+    <tr>
+        <td>$timeIn</td>
+        <td>$timeOut</td>
+        <td>$Sum</td>
+    </tr>
+
+    ]]>
+</string>
+
+    <string name="template4"><![CDATA[
+    </table>
+    <p >-total in hours: $totalHours</p>
+    <br>
+    <br>
+
+    ]]>
+</string>
+
+    <string name="template5"><![CDATA[
+    </body>
+    </html>
+    ]]>
+</string>
+
 </resources>
