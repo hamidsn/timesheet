@@ -3,8 +3,11 @@ package com.tag.management.nfc;
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -12,7 +15,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.Patterns;
 
-import com.google.android.gms.tasks.Task;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -24,15 +26,16 @@ import com.tag.management.nfc.worker.MidnightFinder;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.sql.Timestamp;
 import java.text.DateFormat;
-import java.text.DateFormatSymbols;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -48,11 +51,11 @@ import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
 public class TimesheetUtil {
-    public static final String WORKERTAG = "HAMID";
-    public static final String WORKER_ONCE_TAG = "HAMIDONCE";
-    public static final String EMPTY_EMPLOYER_UID = "EMPTY_EMPLOYER_UID";
-    public static final String TIMESHEET_PREF = "TimesheetPref";
-    public static final String WRONG_CHILD_NAME_FBDB = "WRONG_CHILD_NAME_FBDB";
+    private static final String WORKERTAG = "HAMID";
+    private static final String WORKER_ONCE_TAG = "HAMIDONCE";
+    private static final String EMPTY_EMPLOYER_UID = "EMPTY_EMPLOYER_UID";
+    private static final String TIMESHEET_PREF = "TimesheetPref";
+    private static final String WRONG_CHILD_NAME_FBDB = "WRONG_CHILD_NAME_FBDB";
     private static final String PATTERN_REGISTRATION = "MM/dd/yyyy";
     private static final String EMPLOYEE = "Employee: ";
     private static final String WRONG_TAG = "Tag read error";
@@ -61,7 +64,6 @@ public class TimesheetUtil {
     private static final String TITLE = "Title";
     private static final String newLine = "\n";
     private static final String PATTERN_CURRENT = "EEE dd MMM HH:mm";
-    private static final String PATTERN_DATE = "EEE dd MMM yyyy";
     private static final String PATTERN_MONTH = "MM";
     private static final String PATTERN_DAY = "dd";
     private static final String PATTERN_YEAR = "yyyy";
@@ -70,6 +72,7 @@ public class TimesheetUtil {
     private static final String PREF_EMPLOYER_UID = "pref_employer_uid";
     public static boolean isDoing = false;
     public static String employerUid = "";
+    private static Long totalMinutes = 0L;
 
     static boolean isEmailValid(String email) {
         Pattern pattern = Patterns.EMAIL_ADDRESS;
@@ -115,7 +118,6 @@ public class TimesheetUtil {
     }
 
     static String getEmployer(String message) {
-        //String tagMessage;
         String[] items = message.split(newLine);
         return items.length > 0 ? items[1] : WRONG_TAG;
     }
@@ -141,17 +143,10 @@ public class TimesheetUtil {
         }
     }
 
-    public static String getCurrentTimeUsingCalendar() {
+    static String getCurrentTimeUsingCalendar() {
         Calendar cal = Calendar.getInstance();
         Date date = cal.getTime();
         @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat(PATTERN_CURRENT);
-        return dateFormat.format(date);
-    }
-
-    public static String getCurrentDateUsingCalendar() {
-        Calendar cal = Calendar.getInstance();
-        Date date = cal.getTime();
-        @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat(PATTERN_DATE);
         return dateFormat.format(date);
     }
 
@@ -252,7 +247,7 @@ public class TimesheetUtil {
         return (c.getTimeInMillis() - System.currentTimeMillis()) / 60000;
     }
 
-    public static long getAbsoluteMillisTillMidnight() {
+/*    public static long getAbsoluteMillisTillMidnight() {
         Calendar tomorrow = Calendar.getInstance();
         tomorrow.add(Calendar.DATE, 1);
         tomorrow.set(Calendar.HOUR_OF_DAY, 0);
@@ -278,7 +273,7 @@ public class TimesheetUtil {
         }
 
         return absoluteMilis;
-    }
+    }*/
 
     public static String getEmployerUid(Context context) {
         SharedPreferences pref = context.getSharedPreferences(TIMESHEET_PREF, 0);
@@ -293,9 +288,9 @@ public class TimesheetUtil {
         editor.apply();
     }
 
-    public static String getMonth(int month) {
+    /*public static String getMonth(int month) {
         return new DateFormatSymbols().getMonths()[month - 1];
-    }
+    }*/
 
     @NonNull
     public static String validateStringFB(String childName) {
@@ -305,15 +300,10 @@ public class TimesheetUtil {
         return childName.replace(".", DASH_CHAR).replace(" ", DASH_CHAR).replace("#", DASH_CHAR).replace("$", DASH_CHAR).replace("[", DASH_CHAR).replace("]", DASH_CHAR);
     }
 
-    public static List<ReportEntry> filterStaffTimetable(List<ReportEntry> staff) {
+    static List<ReportEntry> filterStaffTimetable(List<ReportEntry> staff) {
         List<ReportEntry> mFinalList = new ArrayList<>();
 
         for (int i = 0; i < staff.size(); i++) {
-            Log.d("report=====", "* " + staff.get(i).getEmployeeFullName());
-            Log.d("report=====", "* " + staff.get(i).getId());
-            Log.d("report=====", "* " + staff.get(i).getEmployeeTimestampIn());
-            Log.d("report=====", "* " + staff.get(i).getEmployeeTimestampOut());
-            Log.d("report=====", "* ******");
             if (staff.get(i).getEmployeeTimestampIn().contains("-")) {
                 String[] splittedTimestampIn = staff.get(i).getEmployeeTimestampIn().split("-");
                 String[] splittedTimestampOut = staff.get(i).getEmployeeTimestampOut().split("-");
@@ -323,34 +313,24 @@ public class TimesheetUtil {
             }
         }
         /////
-        Collections.sort(staff, new Comparator<ReportEntry>() {
-
-            @Override
-            public int compare(ReportEntry obj1, ReportEntry obj2) {
-                return obj1.getEmployeeFullName().compareToIgnoreCase(obj2.getEmployeeFullName());
-            }
-        });
+        Collections.sort(staff, (obj1, obj2) -> obj1.getEmployeeFullName().compareToIgnoreCase(obj2.getEmployeeFullName()));
         /////
 
         for (ReportEntry person : staff) {
             if (!person.getEmployeeTimestampIn().contains("-")) {
                 mFinalList.add(person);
-
-                Log.d("report=", "* " + person.getEmployeeFullName());
-                Log.d("report=", "* " + person.getId());
-                Log.d("report=", "* " + person.getEmployeeTimestampIn());
-                Log.d("report=", "* " + person.getEmployeeTimestampOut());
-                Log.d("report=", "* ******");
             }
         }
         return mFinalList;
     }
 
-    public static void createHTML(Context context, List<ReportEntry> mFinalList, String employerUid) {
-        String htmlDocument = context.getString(R.string.template1);
+    static void createHTML(Context context, List<ReportEntry> mFinalList, String employerUid, String startDate, String endDate) {
+        StringBuilder htmlDocument = new StringBuilder();
+        htmlDocument.append(context.getString(R.string.template1).replace("$start", startDate).replace("$end", endDate));
+
 
         //Clean duplicated names() those with - in timing
-        ArrayList<String> withoutDuplicatedNames = new ArrayList<String>();
+        ArrayList<String> withoutDuplicatedNames = new ArrayList<>();
         for (ReportEntry element : mFinalList) {
             if (!withoutDuplicatedNames.contains(element.getEmployeeFullName())) {
                 withoutDuplicatedNames.add(element.getEmployeeFullName());
@@ -358,25 +338,68 @@ public class TimesheetUtil {
         }
 
         //create the html content
-        //todo below < or <=
         for (int i = 0; i < withoutDuplicatedNames.size(); i++) {
-            htmlDocument += context.getString(R.string.template2).replace("$name", withoutDuplicatedNames.get(i)).replace("$name", withoutDuplicatedNames.get(i));
+            htmlDocument.append(context.getString(R.string.template2).replace("$name", withoutDuplicatedNames.get(i)).replace("$name", withoutDuplicatedNames.get(i)));
 
-            //todo same as above
+            StringBuilder htmlDocumentBuilder = new StringBuilder(htmlDocument.toString());
             for (int j = 0; j < mFinalList.size(); j++) {
                 if (mFinalList.get(j).getEmployeeFullName().equals(withoutDuplicatedNames.get(i))) {
-                    htmlDocument += context.getString(R.string.template3).
-                            replace("$timeIn", mFinalList.get(j).getEmployeeTimestampIn()).
-                            replace("$timeOut", mFinalList.get(j).getEmployeeTimestampOut()).
-                            replace("$Sum", "calculate sum");
+                    String timestampIn = mFinalList.get(j).getEmployeeTimestampIn();
+                    String timestampOut = mFinalList.get(j).getEmployeeTimestampOut();
+                    htmlDocumentBuilder.append(context.getString(R.string.template3).
+                            replace("$timeIn", timestampIn).
+                            replace("$timeOut", timestampOut).
+                            replace("$Sum", calculateTimeBetween(timestampIn, timestampOut)));
                 }
             }
-            htmlDocument += context.getString(R.string.template4).replace("$totalHours", "CALCULATE ME");
+            htmlDocument = new StringBuilder(htmlDocumentBuilder.toString());
+            htmlDocument.append(context.getString(R.string.template4).replace("$totalHours", timeUnitToFullTime(totalMinutes, TimeUnit.MINUTES)));
+            totalMinutes = 0L;
         }
-        htmlDocument += context.getString(R.string.template5);
-        saveHTMLFile(context, htmlDocument, employerUid);
+        htmlDocument.append(context.getString(R.string.template5));
+        saveHTMLFile(context, htmlDocument.toString(), employerUid);
 
         Log.d("html", "" + htmlDocument);
+    }
+
+    static String calculateTimeBetween(String timestampIn, String timestampOut) {
+        Timestamp in = convertStringToTimestamp(timestampIn);
+        Timestamp out = convertStringToTimestamp(timestampOut);
+        boolean validTiming = (in != null && out != null);
+
+        totalMinutes += validTiming ? ((Math.abs(in.getTime() - out.getTime())) / 1000 / 60) : 0;
+        return validTiming
+                ? timeUnitToFullTime(Math.abs(in.getTime() - out.getTime()), TimeUnit.MILLISECONDS)
+                : " - ";
+    }
+
+    @SuppressLint("DefaultLocale")
+    private static String timeUnitToFullTime(long time, TimeUnit timeUnit) {
+        long hour = timeUnit.toHours(time);
+        long minute = timeUnit.toMinutes(time) % 60;
+        String result = "0";
+        if (hour > 0) {
+            result = String.format("%d(h):%02d(m)", hour, minute);
+        } else if (minute > 0) {
+            result = String.format("%d(m)", minute);
+        }
+        return result;
+    }
+
+    //this is used to create report
+    @SuppressLint("SimpleDateFormat")
+    private static Timestamp convertStringToTimestamp(String str_date) {
+        java.sql.Timestamp timeStampDate;
+        try {
+            DateFormat formatter;
+            formatter = new SimpleDateFormat(PATTERN_CURRENT);
+            Date date = formatter.parse(str_date);
+            timeStampDate = new Timestamp(date.getTime());
+        } catch (ParseException e) {
+            System.out.println("Exception :" + e);
+            timeStampDate = null;
+        }
+        return timeStampDate;
     }
 
     private static void saveHTMLFile(Context context, String data, String employerUid) {
@@ -384,7 +407,6 @@ public class TimesheetUtil {
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput("timesheet.html", Context.MODE_PRIVATE));
             outputStreamWriter.write(data);
             outputStreamWriter.close();
-            //Uri uri = Uri.fromFile(context.getFileStreamPath("timesheet.html"));
         } catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
         }
@@ -394,7 +416,7 @@ public class TimesheetUtil {
         UploadTask uploadTask = storageRef.putFile(file);
         uploadTask.continueWithTask(task -> {
             if (!task.isSuccessful()) {
-                throw task.getException();
+                throw Objects.requireNonNull(task.getException());
             }
 
             // Continue with the task to get the download URL
@@ -402,46 +424,26 @@ public class TimesheetUtil {
         }).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 Uri downloadUrl = task.getResult();
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setData(downloadUrl);
+                context.startActivity(i);
             } else {
-                // Handle failures
+                //todo Handle failures
                 // ...
             }
         });
     }
 
+    static boolean isNetworkAvailable(Context context) {
+        ConnectivityManager connectivityManager = (ConnectivityManager)
+                context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = null;
+        if (connectivityManager != null) {
+            activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        }
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
 }
 
-
-
-
-    /*private static void readFromFile(Context context) {
-        String ret = "";
-
-        try {
-            //todo check file name
-            InputStream inputStream = context.openFileInput("timesheet.html");
-
-            if ( inputStream != null ) {
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                String receiveString;
-                StringBuilder stringBuilder = new StringBuilder();
-
-                while ( (receiveString = bufferedReader.readLine()) != null ) {
-                    stringBuilder.append(receiveString);
-                }
-
-                inputStream.close();
-                ret = stringBuilder.toString();
-                Log.d("html", ret);
-            }
-        }
-        catch (FileNotFoundException e) {
-            Log.e("login activity", "File not found: " + e.toString());
-        } catch (IOException e) {
-            Log.e("login activity", "Can not read file: " + e.toString());
-        }
-
-    }
-*/
 

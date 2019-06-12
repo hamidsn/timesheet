@@ -53,7 +53,7 @@
     </head>
     <body>
 
-    <h2>Report - from to to</h2>]]>
+    <h2>Report - from $start to $end</h2>]]>
 </string>
 
     <string name="template2"><![CDATA[<table>
@@ -80,7 +80,7 @@
 
     <string name="template4"><![CDATA[
     </table>
-    <p >-total in hours: $totalHours</p>
+    <p >-total: $totalHours</p>
     <br>
     <br>
 

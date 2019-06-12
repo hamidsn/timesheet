@@ -1,5 +1,6 @@
 package com.tag.management.nfc;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
@@ -9,6 +10,7 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -45,34 +47,29 @@ import io.fabric.sdk.android.Fabric;
 
 public class ReportActivity extends AppCompatActivity {
 
-    public static final String CALENDAR_DIVIDER = " / ";
-    public static final String MONTH_YEAR_PICKER_DIALOG = "MonthYearPickerDialog";
-    private static final String EMPLOYEES = "employees";
+    public static final String CALENDAR_DIVIDER = "/";
     private static final String ANONYMOUS = "anonymous";
     private static final int RC_SIGN_IN = 1;
     private final String ERROR = "bad_data";
-   // Handler handler;
-    //firebase instance variables
+    List<ReportEntry> staff = null;
+    List<ReportEntry> mFinalList = new ArrayList<>();
+    int staffNumber = 0;
+    int downloadedDay = 0;
+    int maxSelectedDays = 0;
     private FirebaseAuth mFirebaseAuth;
     private ChildEventListener mChildEventListener;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
     private Trace myTrace;
-    private String STARTUP_TRACE_NAME = "nfc_launcher_trace";
     private String employerUid, employerName;
     private DatabaseReference mMessagesDatabaseReference;
     private FirebaseDatabase mFirebaseDatabase;
     private String selectedYear = "";
     private String selectedMonth = "";
     private String selectedDay = "";
+    private String startDate, endDate;
     private ReportDatabase reportListDb;
     private String READ_REPORT_START = "readReportStart";
-    private String READ_REPORT_FINISH = "readReportFinish";
-    private String PARSEINFORMATION = "parseInformation";
-    List<ReportEntry> staff = null;
-    List<ReportEntry> mFinalList = new ArrayList<>();
-    int staffNumber = 0;
-    int downloadedDay = 0;
-    int maxSelectedDays = 0;
+    private FloatingActionButton fab;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,7 +77,6 @@ public class ReportActivity extends AppCompatActivity {
         //handler = new Handler();
         Fabric.with(this, new Crashlytics());
         setContentView(R.layout.activity_report);
-
         initView();
         initFirebase();
     }
@@ -99,6 +95,7 @@ public class ReportActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        hideSpinner();
         mFirebaseAuth.addAuthStateListener(mAuthStateListener);
     }
 
@@ -129,6 +126,7 @@ public class ReportActivity extends AppCompatActivity {
         //todo: are we used?
         employerName = ANONYMOUS;
         employerUid = ANONYMOUS;
+        String STARTUP_TRACE_NAME = "nfc_launcher_trace";
         myTrace = FirebasePerformance.getInstance().newTrace(STARTUP_TRACE_NAME);
         myTrace.start();
         Fabric.with(this, new Crashlytics());
@@ -174,36 +172,51 @@ public class ReportActivity extends AppCompatActivity {
                 .withSelectedDate(new Date());
         calendar.setTypeface(Typeface.SANS_SERIF);
 
-        FloatingActionButton fab = findViewById(R.id.fab);
+        fab = findViewById(R.id.fab);
         fab.setOnClickListener(view ->
                 {
+                    if (!TimesheetUtil.isNetworkAvailable(this)) {
+                        showSnackMessage(this, "Network connection error", false, R.color.snackbar_error);
+                    } else {
 
-                    // todo delete old report?
-                    AppExecutors.getInstance().diskIO().execute(() -> reportListDb.reportDao().nukeTable());
-                    staffNumber = 0;
-                    downloadedDay = 0;
+                        showSpinner();
+                        AppExecutors.getInstance().diskIO().execute(() -> reportListDb.reportDao().nukeTable());
+                        staffNumber = 0;
+                        downloadedDay = 0;
 
-                    myTrace.incrementMetric(READ_REPORT_START, 1);
-                    Snackbar.make(view, "Reading data from server", Snackbar.LENGTH_LONG)
-                            .setAction("Remote handshake", null).show();
-                    List<Date> selectedDays = calendar.getSelectedDates();
+                        myTrace.incrementMetric(READ_REPORT_START, 1);
+                    /*Snackbar.make(view, "Reading data from server", Snackbar.LENGTH_LONG)
+                            .setAction("Remote handshake", null).show();*/
+                        showSnackMessage(this, "Reading data from server", false, R.color.snackbar_success);
+                        List<Date> selectedDays = calendar.getSelectedDates();
 
-                    SimpleDateFormat yFormat = new SimpleDateFormat("yyyy");
-                    SimpleDateFormat mFormat = new SimpleDateFormat("MM");
-                    SimpleDateFormat dFormat = new SimpleDateFormat("dd");
+                        @SuppressLint("SimpleDateFormat") SimpleDateFormat yFormat = new SimpleDateFormat("yyyy");
+                        @SuppressLint("SimpleDateFormat") SimpleDateFormat mFormat = new SimpleDateFormat("MM");
+                        @SuppressLint("SimpleDateFormat") SimpleDateFormat dFormat = new SimpleDateFormat("dd");
 
-                    maxSelectedDays = selectedDays.size();
-                    for (int dayCounter = 0; dayCounter < maxSelectedDays; dayCounter++) {
-                        selectedYear = yFormat.format(selectedDays.get(dayCounter));
-                        selectedMonth = mFormat.format(selectedDays.get(dayCounter));
-                        selectedDay = dFormat.format(selectedDays.get(dayCounter));
-                        if (!TextUtils.isEmpty(employerUid)) {
-                            mMessagesDatabaseReference = mFirebaseDatabase.getReference()
-                                    .child(selectedYear)
-                                    .child(selectedMonth)
-                                    .child(selectedDay)
-                                    .child(employerUid);
-                            attachDatabaseReadListener(dayCounter, maxSelectedDays);
+                        maxSelectedDays = selectedDays.size();
+                        if (!yFormat.format(selectedDays.get(0)).equals(yFormat.format(selectedDays.get(maxSelectedDays - 1)))) {
+                            showSnackMessage(this, "Sorry, report from two different years are not accepted.", true, R.color.snackbar_error);
+                        } else {
+                            for (int dayCounter = 0; dayCounter < maxSelectedDays; dayCounter++) {
+                                selectedYear = yFormat.format(selectedDays.get(dayCounter));
+                                selectedMonth = mFormat.format(selectedDays.get(dayCounter));
+                                selectedDay = dFormat.format(selectedDays.get(dayCounter));
+                                if (dayCounter == 0) {
+                                    startDate = selectedDay + CALENDAR_DIVIDER + selectedMonth + CALENDAR_DIVIDER + selectedYear;
+                                }
+                                if (dayCounter == maxSelectedDays - 1) {
+                                    endDate = selectedDay + CALENDAR_DIVIDER + selectedMonth + CALENDAR_DIVIDER + selectedYear;
+                                }
+                                if (!TextUtils.isEmpty(employerUid)) {
+                                    mMessagesDatabaseReference = mFirebaseDatabase.getReference()
+                                            .child(selectedYear)
+                                            .child(selectedMonth)
+                                            .child(selectedDay)
+                                            .child(employerUid);
+                                    attachDatabaseReadListener(dayCounter, maxSelectedDays);
+                                }
+                            }
                         }
                     }
                 }
@@ -214,9 +227,9 @@ public class ReportActivity extends AppCompatActivity {
     }
 
     private void attachDatabaseReadListener(int day, int maxDays) {
-        if (day == 0) {
+        /*if (day == 0) {
             showSpinner();
-        }
+        }*/
         mChildEventListener = new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String s) {
@@ -229,20 +242,20 @@ public class ReportActivity extends AppCompatActivity {
                         Log.d("report", "* " + report.getId());
                         Log.d("report", "* " + report.getEmployeeTimestampIn());
                         Log.d("report", "* " + report.getEmployeeTimestampOut());
-                        Log.d("report", "******\n" );
+                        Log.d("report", "******\n");
 
                     } else {
                         employeeIndividual = new ReportEntry(ERROR, ERROR, ERROR, ERROR, ERROR, 0);
                     }
 
-                        // check if employee is not in DB then add it
-                        AppExecutors.getInstance().diskIO().execute(() -> {
+                    // check if employee is not in DB then add it
+                    AppExecutors.getInstance().diskIO().execute(() -> {
 
-                            if (!TextUtils.isEmpty(employeeIndividual.getEmployerName())) {
-                                reportListDb.reportDao().insertReport(employeeIndividual);
-                            }
+                        if (!TextUtils.isEmpty(employeeIndividual.getEmployerName())) {
+                            reportListDb.reportDao().insertReport(employeeIndividual);
+                        }
 
-                        });
+                    });
                 } catch (DatabaseException e) {
                     Log.e("report", e.getMessage());
                 }
@@ -268,13 +281,13 @@ public class ReportActivity extends AppCompatActivity {
 
         mMessagesDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                System.out.println("We're done loading the initial "+dataSnapshot.getChildrenCount()+" items");
+                System.out.println("We're done loading the initial " + dataSnapshot.getChildrenCount() + " items");
                 downloadedDay += 1;
-                staffNumber +=dataSnapshot.getChildrenCount();
+                staffNumber += dataSnapshot.getChildrenCount();
                 Log.d("report", "staffNumber:" + staffNumber);
                 Log.d("report", "downloadedDay:" + downloadedDay);
                 Log.d("report", "maxSelectedDays:" + maxSelectedDays);
-                if(downloadedDay == maxSelectedDays){
+                if (downloadedDay == maxSelectedDays) {
                     //we finished downloading the last selected day
                     parseInfo();
                 }
@@ -289,50 +302,41 @@ public class ReportActivity extends AppCompatActivity {
         mMessagesDatabaseReference.keepSynced(false);
 
         if (day == maxDays - 1) {
+            String READ_REPORT_FINISH = "readReportFinish";
             myTrace.incrementMetric(READ_REPORT_FINISH, 1);
-            hideSpinner();
+            //hideSpinner();
 
         }
     }
 
     private void showSpinner() {
-        //10 seconds spinner to make sure data is downloaded from firebase
         findViewById(R.id.loadingPanel).setVisibility(View.VISIBLE);
-
-       /* handler.postDelayed(() -> {
-            findViewById(R.id.loadingPanel).setVisibility(View.GONE);
-            parseInfo();
-        }, 10000);*/
-
+        fab.setVisibility(View.INVISIBLE);
     }
 
     private void hideSpinner() {
         findViewById(R.id.loadingPanel).setVisibility(View.GONE);
-        /*if (handler != null) {
-            handler.removeCallbacksAndMessages(null);
-        }*/
-
+        fab.setVisibility(View.VISIBLE);
     }
 
     private void parseInfo() {
+        String PARSEINFORMATION = "parseInformation";
         myTrace.incrementMetric(PARSEINFORMATION, 1);
         AppExecutors.getInstance().diskIO().execute(() -> {
-                    staff = reportListDb.reportDao().loadAllReports();
-                    Log.d("report", "* ***** * final staff number" + staff.size());
+            staff = reportListDb.reportDao().loadAllReports();
+            Log.d("report", "* ***** * final staff number" + staff.size());
 
             mFinalList = TimesheetUtil.filterStaffTimetable(staff);
-            if(mFinalList.isEmpty()){
-                showWrongMessage(this);
+            if (mFinalList.isEmpty()) {
+                showSnackMessage(this, "No entry found in cloud. Try other dates", true, R.color.snackbar_error);
+
             } else {
-                TimesheetUtil.createHTML(this, mFinalList, employerUid);
+                TimesheetUtil.createHTML(this, mFinalList, employerUid, startDate, endDate);
+                showSnackMessage(this, "Creating report in the cloud", false, R.color.snackbar_success);
             }
         });
+        showSpinner();
 
-        //todo Create html file based on mFinalList
-        //todo store in html file name
-        //todo create folder in fb by employerid
-        //todo upload html
-        //todo show page, share link or print html
     }
 
     private void detachDatabaseReadListener() {
@@ -348,11 +352,21 @@ public class ReportActivity extends AppCompatActivity {
         myTrace.stop();
     }
 
-    private void showWrongMessage(final Context context)
-    {
+    private void showSnackMessage(final Context context, String message, boolean hideSpinner, int color) {
         Handler handler = new Handler(Looper.getMainLooper());
         handler.post(
-                () -> Toast.makeText(context, "No entry found in cloud. Try other dates", Toast.LENGTH_SHORT).show()
+                () -> {
+                    //Toast.makeText(context, "No entry found in cloud. Try other dates", Toast.LENGTH_SHORT).show();
+                    Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG)
+                            .setAction("Remote handshake", null);
+                    View snackBarView = snackbar.getView();
+                    snackBarView.setBackgroundColor(ContextCompat.getColor(context, color));
+                    snackbar.show();
+                    if (hideSpinner) {
+                        hideSpinner();
+                    }
+                }
         );
+
     }
 }
