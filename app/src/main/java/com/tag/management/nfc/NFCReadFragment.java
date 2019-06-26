@@ -7,8 +7,8 @@ import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.tech.Ndef;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
+import androidx.annotation.Nullable;
+import com.google.android.material.snackbar.Snackbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
@@ -136,8 +136,8 @@ public class NFCReadFragment extends DialogFragment {
                                 .make(getView(), (!availability ? HELLO : BYE), Snackbar.LENGTH_LONG);
                         View snackbarView = snackbar.getView();
                         snackbarView.setBackgroundColor(Color.WHITE);
-                        TextView textView = snackbarView.findViewById(android.support.design.R.id.snackbar_text);
-                        textView.setTextColor(!availability ? Color.DKGRAY : Color.GRAY);
+                        TextView textView = snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
+                        textView.setTextColor(!availability ? Color.DKGRAY : Color.MAGENTA);
                         textView.setGravity(Gravity.CENTER);
                         snackbar.show();
                     }

@@ -1,8 +1,8 @@
 package com.tag.management.nfc.model;
 
 import android.app.Application;
-import android.arch.lifecycle.AndroidViewModel;
-import android.arch.lifecycle.LiveData;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import android.util.Log;
 
 import com.tag.management.nfc.database.AppDatabase;

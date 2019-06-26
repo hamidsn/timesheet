@@ -1,7 +1,7 @@
 package com.tag.management.nfc.worker;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.tag.management.nfc.TimesheetUtil;

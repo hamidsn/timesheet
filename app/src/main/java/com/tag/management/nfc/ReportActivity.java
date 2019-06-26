@@ -7,11 +7,11 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -68,7 +68,6 @@ public class ReportActivity extends AppCompatActivity {
     private String selectedDay = "";
     private String startDate, endDate;
     private ReportDatabase reportListDb;
-    private String READ_REPORT_START = "readReportStart";
     private FloatingActionButton fab;
 
     @Override
@@ -184,7 +183,7 @@ public class ReportActivity extends AppCompatActivity {
                         staffNumber = 0;
                         downloadedDay = 0;
 
-                        myTrace.incrementMetric(READ_REPORT_START, 1);
+                        myTrace.incrementMetric("readReportStart", 1);
                     /*Snackbar.make(view, "Reading data from server", Snackbar.LENGTH_LONG)
                             .setAction("Remote handshake", null).show();*/
                         showSnackMessage(this, "Reading data from server", false, R.color.snackbar_success);
@@ -302,8 +301,7 @@ public class ReportActivity extends AppCompatActivity {
         mMessagesDatabaseReference.keepSynced(false);
 
         if (day == maxDays - 1) {
-            String READ_REPORT_FINISH = "readReportFinish";
-            myTrace.incrementMetric(READ_REPORT_FINISH, 1);
+            myTrace.incrementMetric("readReportFinish", 1);
             //hideSpinner();
 
         }
@@ -320,8 +318,7 @@ public class ReportActivity extends AppCompatActivity {
     }
 
     private void parseInfo() {
-        String PARSEINFORMATION = "parseInformation";
-        myTrace.incrementMetric(PARSEINFORMATION, 1);
+        myTrace.incrementMetric("parseInformation", 1);
         AppExecutors.getInstance().diskIO().execute(() -> {
             staff = reportListDb.reportDao().loadAllReports();
             Log.d("report", "* ***** * final staff number" + staff.size());

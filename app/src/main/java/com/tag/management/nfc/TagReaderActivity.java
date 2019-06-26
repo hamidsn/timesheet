@@ -1,19 +1,19 @@
 package com.tag.management.nfc;
 
 import android.app.PendingIntent;
-import android.arch.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
@@ -42,7 +42,7 @@ import java.util.List;
 
 import io.fabric.sdk.android.Fabric;
 
-import static android.support.v7.widget.DividerItemDecoration.VERTICAL;
+import static androidx.recyclerview.widget.DividerItemDecoration.VERTICAL;
 
 public class TagReaderActivity extends AppCompatActivity implements Listener, StaffListener, EmployeeAdapter.ItemClickListener {
 

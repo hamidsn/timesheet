@@ -1,19 +1,12 @@
 package com.tag.management.nfc.database;
 
-import android.arch.persistence.room.Database;
-import android.arch.persistence.room.Room;
-import android.arch.persistence.room.RoomDatabase;
+import androidx.room.Database;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
 import android.content.Context;
 import android.util.Log;
 
 import com.tag.management.nfc.TimesheetUtil;
-import com.tag.management.nfc.worker.MidnightFinder;
-
-import java.util.concurrent.TimeUnit;
-
-import androidx.work.ExistingWorkPolicy;
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkManager;
 
 @Database(entities = {DailyActivityEntry.class}, version = 13, exportSchema = false)
 public abstract class DailyActivityDatabase extends RoomDatabase {
