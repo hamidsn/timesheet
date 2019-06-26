@@ -10,12 +10,13 @@
     <string name="hint_message">Employee\'s full name</string>
     <string name="hint_email">Employee\'s email</string>
     <string name="empty_tag">Tag is empty</string>
+    <string name="signed_in">Signed in!</string>
 
     <string name="sign_out">Sign Out</string>
     <string name="image_button_label">Take a photo</string>
 
     <string name="email_address">sedghi.h@gmail.com</string>
-    <string name="email_pass">Mmalek123</string>
+    <string name="email_pass">*****</string>
     <string name="email_title">Employee tag registration</string>
 
     <string name="button_ok">Ok</string>

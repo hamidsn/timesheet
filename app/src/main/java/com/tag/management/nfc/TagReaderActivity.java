@@ -1,6 +1,8 @@
 package com.tag.management.nfc;
 
 import android.app.PendingIntent;
+
+import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -127,11 +129,11 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
     }
 
     private void showReadFragment() {
-        mNfcReadFragment = (NFCReadFragment) getFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
+        mNfcReadFragment = (NFCReadFragment) getSupportFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
         if (mNfcReadFragment == null) {
             mNfcReadFragment = NFCReadFragment.newInstance();
         }
-        mNfcReadFragment.show(getFragmentManager(), NFCReadFragment.TAG);
+        mNfcReadFragment.show(getSupportFragmentManager(), NFCReadFragment.TAG);
     }
 
     @Override
@@ -142,7 +144,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
 
             if (isDialogDisplayed) {
                 myTrace.incrementMetric(READ_FROM_NFC,1);
-                mNfcReadFragment = (NFCReadFragment) getFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
+                mNfcReadFragment = (NFCReadFragment) getSupportFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
                 Ndef ndef = Ndef.get(tag);
 
                 String tagEmployer = mNfcReadFragment.returnEmployerName(ndef);
@@ -212,7 +214,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
         if (requestCode == RC_SIGN_IN) {
             if (resultCode == RESULT_OK) {
                 // Sign-in succeeded, set up the UI
-                Toast.makeText(this, "Signed in!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getResources().getString(R.string.signed_in), Toast.LENGTH_SHORT).show();
 
             }
         }

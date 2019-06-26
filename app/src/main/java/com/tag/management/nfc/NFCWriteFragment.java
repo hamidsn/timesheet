@@ -1,14 +1,11 @@
 package com.tag.management.nfc;
 
-import android.app.DialogFragment;
 import android.content.Context;
 import android.nfc.NdefMessage;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.nfc.tech.NdefFormatable;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import com.google.android.material.snackbar.Snackbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -19,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.creativityapps.gmailbackgroundlibrary.BackgroundMail;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 import com.tag.management.nfc.engine.EncodeMorseManager;
@@ -26,27 +24,31 @@ import com.tag.management.nfc.engine.EncodeMorseManager;
 import java.util.HashMap;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
+
 public class NFCWriteFragment extends DialogFragment {
 
-    public static final String TAG = NFCWriteFragment.class.getSimpleName();
-    public static final String SEND_EMAIL = "send_email";
-    public static final String UTF_8 = "UTF-8";
-    public static final String EMAIL_FAILED = "Email failed";
-    public static final String EMAIL_SENT = "Email sent";
+    static final String TAG = NFCWriteFragment.class.getSimpleName();
+    private static final String SEND_EMAIL = "send_email";
+    //public static final String UTF_8 = "UTF-8";
+    private static final String EMAIL_FAILED = "Email failed";
+    private static final String EMAIL_SENT = "Email sent";
     private TextView mTvMessage;
     private ProgressBar mProgress;
     private Listener mListener;
     private boolean send_email = false;
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
 
-    public static NFCWriteFragment newInstance() {
+    static NFCWriteFragment newInstance() {
 
         return new NFCWriteFragment();
     }
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_write, container, false);
         initViews(view);
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
@@ -56,9 +58,9 @@ public class NFCWriteFragment extends DialogFragment {
         // Enabling developer mode allows many more requests to be made per hour, so developers
         // can test different config values during development.
         FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
-                .setDeveloperModeEnabled(BuildConfig.DEBUG)
+                .setMinimumFetchIntervalInSeconds(3600)
                 .build();
-        mFirebaseRemoteConfig.setConfigSettings(configSettings);
+        mFirebaseRemoteConfig.setConfigSettingsAsync(configSettings);
         // Define default config values. Defaults are used when fetched config values are not
         // available. Eg: if an error occurred fetching values from the server.
         Map<String, Object> defaultConfigMap = new HashMap<>();
@@ -88,12 +90,12 @@ public class NFCWriteFragment extends DialogFragment {
         mListener.onDialogDismissed();
     }
 
-    public boolean onNfcDetected(Tag tag, NdefMessage ndefMessage, String emailAddress, String messageToWrite, String employerName) {
+    boolean onNfcDetected(Tag tag, NdefMessage ndefMessage, String emailAddress, String messageToWrite, String employerName) {
 
         mProgress.setVisibility(View.VISIBLE);
         try {
             if (tag == null) {
-                Toast.makeText(getActivity(), "An Error has Occurred, Please Try Again", Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity(), "An Error has Occurred, tag in null. Please Try Again", Toast.LENGTH_LONG).show();
             }
 
             Ndef ndef = Ndef.get(tag);
@@ -110,9 +112,10 @@ public class NFCWriteFragment extends DialogFragment {
 
                     String message = new String(ndefOldMessage.getRecords()[0].getPayload());
                     message = EncodeMorseManager.getEncodedString(message);
-                    // Toast.makeText(getActivity(), "Rewriting tag. Older name was " + message.split("\n")[0], Toast.LENGTH_LONG).show();
-                    Snackbar.make(this.getView(), "Rewriting tag. Older name was " + message.split("\n")[0], Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
+                    if (this.getView() != null) {
+                        Snackbar.make(this.getView(), "Rewriting tag. Older name was " + message.split("\n")[0], Snackbar.LENGTH_LONG)
+                                .setAction("Action", null).show();
+                    }
                 }
 
                 if (!ndef.isWritable()) {
@@ -146,17 +149,20 @@ public class NFCWriteFragment extends DialogFragment {
         if (TextUtils.isEmpty(body)) {
             Toast.makeText(getActivity(), getResources().getString(R.string.empty_tag), Toast.LENGTH_SHORT).show();
         } else {
-            BackgroundMail.newBuilder(this)
-                    .withUsername(getResources().getString(R.string.email_address))
-                    .withPassword(getResources().getString(R.string.email_pass))
-                    .withMailto(emailAddress)
-                    .withType(BackgroundMail.TYPE_PLAIN)
-                    .withSubject(getResources().getString(R.string.email_title))
-                    //todo: create a good message
-                    .withBody(body).withProcessVisibility(false)
-                    .withOnSuccessCallback(() -> Toast.makeText(getActivity(), EMAIL_SENT, Toast.LENGTH_LONG).show())
-                    .withOnFailCallback(() -> Toast.makeText(getActivity(), EMAIL_FAILED, Toast.LENGTH_LONG).show())
-                    .send();
+            if (this.getContext() != null) {
+                BackgroundMail.newBuilder(this.getContext())
+                        .withUsername(getResources().getString(R.string.email_address))
+                        .withPassword(getResources().getString(R.string.email_pass))
+                        .withMailto(emailAddress)
+                        .withType(BackgroundMail.TYPE_PLAIN)
+                        .withSubject(getResources().getString(R.string.email_title))
+                        //todo: create a good message
+                        .withBody(body).withProcessVisibility(false)
+                        .withOnSuccessCallback(() -> Toast.makeText(getActivity(), EMAIL_SENT, Toast.LENGTH_LONG).show())
+                        .withOnFailCallback(() -> Toast.makeText(getActivity(), EMAIL_FAILED, Toast.LENGTH_LONG).show())
+                        .send();
+            }
+
         }
     }
 
@@ -179,22 +185,8 @@ public class NFCWriteFragment extends DialogFragment {
         }
     }
 
-/*    private String getTextFromNdefRecord(NdefRecord ndefRecord) {
-        String content = null;
-        try {
-            byte[] payload = ndefRecord.getPayload();
-            String encoding = ((payload[0] & 128) == 0) ? UTF_8 : UTF_8;
-            int languageSize = payload[0] & 0063;
-            content = new String(payload, languageSize + 1, payload.length - languageSize - 1, encoding);
-        } catch (UnsupportedEncodingException e) {
-            Log.e("createTextRecord", e.getMessage());
-        }
-
-        return content;
-    }*/
-
     // Fetch the config to determine the allowed send_email.
-    public void fetchConfig() {
+    private void fetchConfig() {
         long cacheExpiration = 3600; // 1 hour in seconds
         if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
             cacheExpiration = 0;

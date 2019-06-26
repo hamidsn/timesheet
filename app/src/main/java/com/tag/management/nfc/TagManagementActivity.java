@@ -18,7 +18,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -48,10 +47,11 @@ import com.tag.management.nfc.engine.DecodeMorseManager;
 import com.tag.management.nfc.model.Employee;
 
 import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import io.fabric.sdk.android.Fabric;
 
@@ -73,7 +73,6 @@ import io.fabric.sdk.android.Fabric;
 
 public class TagManagementActivity extends AppCompatActivity implements Listener {
 
-    public static final String TAG = TagManagementActivity.class.getSimpleName();
     public static final int RC_SIGN_IN = 1;
     public static final String ANONYMOUS = "anonymous";
     public static final String READ_FROM_NFC = "readFromNfc";
@@ -84,13 +83,12 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     public static final String AUTHENTICATION = "authentication";
     public static final String SIGNOUT = "signout";
     public static final String WRITE_2_NFC = "write2nfc";
-    public static final String UTF_8 = "UTF-8";
+    //public static final String UTF_8 = "UTF-8";
     private static final int RC_PHOTO_PICKER = 2;
     private Uri photoURI;
     private EditText mEtName, mEtEmail;
     private ImageView photoPickerImage;
     private Button mBtWrite;
-    private Button mBImage;
     private String employerUid;
     private NFCWriteFragment mNfcWriteFragment;
     private NFCReadFragment mNfcReadFragment;
@@ -151,7 +149,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
         if (requestCode == RC_SIGN_IN) {
             if (resultCode == RESULT_OK) {
                 // Sign-in succeeded, set up the UI
-                Toast.makeText(this, "Signed in!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getResources().getString(R.string.signed_in), Toast.LENGTH_SHORT).show();
             } else if (resultCode == RESULT_CANCELED) {
                 // Sign in was canceled by the user, finish the activity
                 Toast.makeText(this, "Sign in canceled", Toast.LENGTH_SHORT).show();
@@ -163,24 +161,24 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
             if (extras != null) {
                 Bitmap imageBitmap = (Bitmap) extras.get(DATA);
                 photoPickerImage.setImageBitmap(imageBitmap);
-                photoURI = TimesheetUtil.imageToUri(imageBitmap, getApplicationContext().getContentResolver());
-                storeImageFirebase();
+                if (imageBitmap != null) {
+                    photoURI = TimesheetUtil.imageToUri(imageBitmap, getApplicationContext().getContentResolver());
+                    storeImageFirebase();
+                }
+
             }
 
         }
     }
 
     private void storeImageFirebase() {
-        StorageReference photoRef = mStaffPhotosStorageReference.child(photoURI.getLastPathSegment());
+        StorageReference photoRef = mStaffPhotosStorageReference.child(Objects.requireNonNull(photoURI.getLastPathSegment()));
         // Upload file to Firebase Storage
-
-        //todo test download url
         UploadTask uploadTask = photoRef.putFile(photoURI);
         Task<Uri> urlTask = uploadTask.continueWithTask(task -> {
             if (!task.isSuccessful()) {
-                throw task.getException();
+                throw Objects.requireNonNull(task.getException());
             }
-
             // Continue with the task to get the download URL
             return photoRef.getDownloadUrl();
         }).addOnCompleteListener(task -> {
@@ -205,7 +203,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
         mEtEmail = findViewById(R.id.et_email);
         mBtWrite = findViewById(R.id.btn_write);
         Button mBtRead = findViewById(R.id.btn_read);
-        mBImage = findViewById(R.id.btn_image);
+        Button mBImage = findViewById(R.id.btn_image);
         photoPickerImage = findViewById(R.id.photoPicker);
 
         mEtName.addTextChangedListener(inputValidation);
@@ -287,19 +285,19 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
 
     private void showWriteFragment() {
         isWrite = true;
-        mNfcWriteFragment = (NFCWriteFragment) getFragmentManager().findFragmentByTag(NFCWriteFragment.TAG);
+        mNfcWriteFragment = (NFCWriteFragment) getSupportFragmentManager().findFragmentByTag(NFCWriteFragment.TAG);
         if (mNfcWriteFragment == null) {
             mNfcWriteFragment = NFCWriteFragment.newInstance();
         }
-        mNfcWriteFragment.show(getFragmentManager(), NFCWriteFragment.TAG);
+        mNfcWriteFragment.show(getSupportFragmentManager(), NFCWriteFragment.TAG);
     }
 
     private void showReadFragment() {
-        mNfcReadFragment = (NFCReadFragment) getFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
+        mNfcReadFragment = (NFCReadFragment) getSupportFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
         if (mNfcReadFragment == null) {
             mNfcReadFragment = NFCReadFragment.newInstance();
         }
-        mNfcReadFragment.show(getFragmentManager(), NFCReadFragment.TAG);
+        mNfcReadFragment.show(getSupportFragmentManager(), NFCReadFragment.TAG);
     }
 
     @Override
@@ -431,10 +429,10 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
                     NdefMessage ndefMessage = new NdefMessage(new NdefRecord[]{ndefRecord});
 
                     myTrace.incrementMetric(WRITE_2_NFC,1);
-                    mNfcWriteFragment = (NFCWriteFragment) getFragmentManager().findFragmentByTag(NFCWriteFragment.TAG);
+                    mNfcWriteFragment = (NFCWriteFragment) getSupportFragmentManager().findFragmentByTag(NFCWriteFragment.TAG);
 
 
-                    if (mNfcWriteFragment.onNfcDetected(tag, ndefMessage, emailAddress, messageToWrite, employerName)) {
+                    if (mNfcWriteFragment != null && mNfcWriteFragment.onNfcDetected(tag, ndefMessage, emailAddress, messageToWrite, employerName)) {
                         // write was successful, add employee to fb DB
                         Employee employee = new Employee(employerName, messageToWrite, employerUid, (Uri.EMPTY.equals(downloadUrl) || downloadUrl == null) ? "-" : downloadUrl.toString(), emailAddress, employeeTimeStamp);
                         mMessagesDatabaseReference.push().setValue(employee);
@@ -443,7 +441,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
                 } else {
 
                     myTrace.incrementMetric(READ_FROM_NFC,1);
-                    mNfcReadFragment = (NFCReadFragment) getFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
+                    mNfcReadFragment = (NFCReadFragment) getSupportFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
                     Ndef ndef = Ndef.get(tag);
                     mNfcReadFragment.onNfcDetectedManager(ndef);
                 }
@@ -452,18 +450,14 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     }
 
     private NdefRecord createTextRecord(String staffName, String employerName, String employeeTimeStamp) {
-        try {
-            staffName = DecodeMorseManager.getDecodedString(staffName + "\n" + employerName + "\n" + employeeTimeStamp);
-            final byte[] text = staffName.getBytes(UTF_8);
-            final int textLength = text.length;
-            final ByteArrayOutputStream payload = new ByteArrayOutputStream(/*1 + ? */  textLength);
-            payload.write(text, 0, textLength);
+        NdefRecord ndefRecord;
+        staffName = DecodeMorseManager.getDecodedString(staffName + "\n" + employerName + "\n" + employeeTimeStamp);
+        final byte[] text = staffName.getBytes(StandardCharsets.UTF_8);
+        final int textLength = text.length;
+        final ByteArrayOutputStream payload = new ByteArrayOutputStream(textLength);
+        payload.write(text, 0, textLength);
+        ndefRecord = new NdefRecord(NdefRecord.TNF_WELL_KNOWN, NdefRecord.RTD_TEXT, new byte[0], payload.toByteArray());
 
-
-            return new NdefRecord(NdefRecord.TNF_WELL_KNOWN, NdefRecord.RTD_TEXT, new byte[0], payload.toByteArray());
-        } catch (UnsupportedEncodingException e) {
-            Log.e(TAG, "createTextRecord error: " + e.getMessage());
-        }
-        return null;
+        return ndefRecord;
     }
 }

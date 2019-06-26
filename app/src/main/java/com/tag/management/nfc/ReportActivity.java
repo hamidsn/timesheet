@@ -86,7 +86,7 @@ public class ReportActivity extends AppCompatActivity {
         if (requestCode == RC_SIGN_IN) {
             if (resultCode == RESULT_OK) {
                 // Sign-in succeeded, set up the UI
-                Toast.makeText(this, "Signed in!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getResources().getString(R.string.signed_in), Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -307,11 +307,13 @@ public class ReportActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressLint("RestrictedApi")
     private void showSpinner() {
         findViewById(R.id.loadingPanel).setVisibility(View.VISIBLE);
         fab.setVisibility(View.INVISIBLE);
     }
 
+    @SuppressLint("RestrictedApi")
     private void hideSpinner() {
         findViewById(R.id.loadingPanel).setVisibility(View.GONE);
         fab.setVisibility(View.VISIBLE);
@@ -321,7 +323,6 @@ public class ReportActivity extends AppCompatActivity {
         myTrace.incrementMetric("parseInformation", 1);
         AppExecutors.getInstance().diskIO().execute(() -> {
             staff = reportListDb.reportDao().loadAllReports();
-            Log.d("report", "* ***** * final staff number" + staff.size());
 
             mFinalList = TimesheetUtil.filterStaffTimetable(staff);
             if (mFinalList.isEmpty()) {

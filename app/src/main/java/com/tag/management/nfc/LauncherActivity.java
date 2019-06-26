@@ -15,21 +15,16 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.perf.FirebasePerformance;
 import com.google.firebase.perf.metrics.Trace;
-
 import java.util.Arrays;
 import java.util.List;
-
 import io.fabric.sdk.android.Fabric;
-
 
 public class LauncherActivity extends AppCompatActivity {
 
-    private static final String ANONYMOUS = "anonymous";
     private static final int RC_SIGN_IN = 1;
     //firebase instance variables
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
-    private String employerUid, employerName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,9 +34,6 @@ public class LauncherActivity extends AppCompatActivity {
 
         mFirebaseAuth = FirebaseAuth.getInstance();
 
-        //todo: are we used?
-        employerName = ANONYMOUS;
-        employerUid = ANONYMOUS;
         String STARTUP_TRACE_NAME = "nfc_launcher_trace";
         Trace myTrace = FirebasePerformance.getInstance().newTrace(STARTUP_TRACE_NAME);
         myTrace.start();
@@ -55,10 +47,9 @@ public class LauncherActivity extends AppCompatActivity {
             FirebaseUser user = firebaseAuth.getCurrentUser();
             if (user != null) {
                 // User is signed in
-                onSignedInInitialize(user.getDisplayName(), user.getUid());
+                onSignedInInitialize(user.getUid());
             } else {
                 // User is signed out
-                onSignedOutCleanup();
                 startActivityForResult(
                         AuthUI.getInstance()
                                 .createSignInIntentBuilder()
@@ -95,7 +86,7 @@ public class LauncherActivity extends AppCompatActivity {
         if (requestCode == RC_SIGN_IN) {
             if (resultCode == RESULT_OK) {
                 // Sign-in succeeded, set up the UI
-                Toast.makeText(this, "Signed in!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getResources().getString(R.string.signed_in), Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -114,15 +105,8 @@ public class LauncherActivity extends AppCompatActivity {
         super.onPause();
     }
 
-    private void onSignedInInitialize(String username, String uid) {
-        employerName = username;
-        employerUid = uid;
+    private void onSignedInInitialize(String uid) {
         TimesheetUtil.setEmployerUid(uid, this);
-    }
-
-    private void onSignedOutCleanup() {
-        employerName = ANONYMOUS;
-        employerUid = ANONYMOUS;
     }
 
     public void onTimesheetClick(View v) {

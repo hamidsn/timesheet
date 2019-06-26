@@ -1,6 +1,6 @@
 package com.tag.management.nfc;
 
-import android.app.DialogFragment;
+import androidx.fragment.app.DialogFragment;
 import android.content.Context;
 import android.graphics.Color;
 import android.nfc.FormatException;

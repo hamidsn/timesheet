@@ -17,8 +17,6 @@
 package com.tag.management.nfc;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,14 +29,14 @@ import com.tag.management.nfc.database.EmployeeEntry;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
 /**
  * This EmployeeAdapter creates and binds ViewHolders, that hold the description and priority of a task,
  * to a RecyclerView to efficiently display data.
  */
 public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.EmployeeViewHolder> {
-
-    // Constant for date format
-    private static final String DATE_FORMAT = "dd/MM/yyy";
 
     // Member variable to handle item clicks
     final private ItemClickListener mItemClickListener;
@@ -52,7 +50,7 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
      * @param context  the current Context
      * @param listener the ItemClickListener
      */
-    public EmployeeAdapter(Context context, ItemClickListener listener) {
+    EmployeeAdapter(Context context, ItemClickListener listener) {
         mContext = context;
         mItemClickListener = listener;
     }
@@ -62,6 +60,7 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
      *
      * @return A new EmployeeViewHolder that holds the view for each task
      */
+    @NonNull
     @Override
     public EmployeeViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         // Inflate the task_layout to a view
@@ -91,20 +90,11 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
         holder.updatedAtView.setText(updatedAt);
         holder.layer.setAlpha((float) (availablity ? 1.0 : 0.2));
 
-        // Programmatically set the text and color for the priority TextView
-        //holder.employeePic.setText(imageUrl);
         if (!imageUrl.isEmpty()) {
-            //messageTextView.setVisibility(View.GONE);
-            //photoImageView.setVisibility(View.VISIBLE);
             Glide.with(holder.employeePic.getContext())
                     .load(imageUrl).placeholder(R.drawable.image_placeholder)
                     .into(holder.employeePic);
         }
-
-        /*GradientDrawable priorityCircle = (GradientDrawable) holder.employeePic.getBackground();
-        // Get the appropriate background color based on the priority
-        int priorityColor = getPriorityColor(0);//todo in or our? change the color
-        priorityCircle.setColor(priorityColor);*/
     }
 
     /**
@@ -117,10 +107,6 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
         }
         return mTaskEntries.size();
     }
-
-/*    public List<EmployeeEntry> getTasks() {
-        return mTaskEntries;
-    }*/
 
     /**
      * When data changes, this method updates the list of taskEntries
