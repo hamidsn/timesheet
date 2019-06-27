@@ -129,6 +129,8 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
     }
 
     private void showReadFragment() {
+        GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_in_out_event), this.getString(R.string.analytics_in_out_event));
+
         mNfcReadFragment = (NFCReadFragment) getSupportFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
         if (mNfcReadFragment == null) {
             mNfcReadFragment = NFCReadFragment.newInstance();
@@ -152,7 +154,9 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
                     mNfcReadFragment.onNfcDetectedStaff(ndef);
 
                 } else {
-                    Toast.makeText(this, "Sorry, this tag is for " + (tagEmployer.length() > 1 ? tagEmployer : "another business") + ". We work for " + appEmployer, Toast.LENGTH_LONG).show();
+                    String message = "Sorry, this tag is for " + (tagEmployer.length() > 1 ? tagEmployer : "another business") + ". We work for " + appEmployer;
+                    GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_read_tag_event), message);
+                    Toast.makeText(this, message, Toast.LENGTH_LONG).show();
                 }
             }
         }
@@ -215,7 +219,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
             if (resultCode == RESULT_OK) {
                 // Sign-in succeeded, set up the UI
                 Toast.makeText(this, getResources().getString(R.string.signed_in), Toast.LENGTH_SHORT).show();
-
+                GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_loggedin_event), this.getString(R.string.analytics_loggedin_label));
             }
         }
     }

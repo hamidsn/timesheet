@@ -4,6 +4,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import android.util.Log;
 
+import com.tag.management.nfc.GAPAnalytics;
 import com.tag.management.nfc.TimesheetUtil;
 
 import androidx.work.Worker;
@@ -23,13 +24,15 @@ public class MidnightFinder extends Worker {
     @Override
     public Result doWork() {
         // midnight DB clean up
-        Log.d("worker:", "midnight finder worker is running");
+        GAPAnalytics.sendEventGA("MidnightFinder", "MidnightFinder error", "midnight finder worker is running");
+
         try {
             TimesheetUtil.applyDailyWorker(this.mContext);
 
             return Result.success();
         } catch (Exception e) {
-            Log.d("worker:", "error - onceoff worker - " + e.getMessage());
+            GAPAnalytics.sendEventGA("MidnightFinder", "MidnightFinder error", "error - onceoff worker - " + e.getMessage());
+
             return Result.retry();
         }
     }

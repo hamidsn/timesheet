@@ -6,6 +6,8 @@ import android.util.Log;
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.tag.management.nfc.GAPAnalytics;
+import com.tag.management.nfc.R;
 import com.tag.management.nfc.TimesheetUtil;
 import com.tag.management.nfc.database.AppDatabase;
 import com.tag.management.nfc.database.DailyActivityDatabase;
@@ -39,7 +41,6 @@ public class MidnightDBCleanup extends Worker {
     @Override
     public Result doWork() {
 
-        Log.d("worker:", " DB cleaning worker is started");
         String employerUid = getInputData().getString(EMPLOYER_UID_INFO);
         if (employerUid == null || employerUid.isEmpty()) {
             employerUid = TimesheetUtil.getEmployerUid(this.mContext);
@@ -81,6 +82,8 @@ public class MidnightDBCleanup extends Worker {
 
                 List<DailyActivityEntry> staff = dailyActivityDb.dailyActivityDao().loadAllEmployees();
 
+                GAPAnalytics.sendEventGA("MidnightDBCleanup", "midnight cleanup", "DB read success: "+ employerUid);
+
                 Log.d("worker:", " DB uploading to firebase");
                 uploadStaffFB(staff);
                 TimesheetUtil.isDoing = false;
@@ -103,7 +106,7 @@ public class MidnightDBCleanup extends Worker {
                 dailyActivityDb.dailyActivityDao().deleteEmployee(entry);
             }
         }
-        Log.d("worker:", " DB pushed to firebase");
+        GAPAnalytics.sendEventGA("MidnightDBCleanup", "midnight cleanup", "DB pushed to firebase");
     }
 
     private void updateStaffAvailability(String uId, boolean availability) {

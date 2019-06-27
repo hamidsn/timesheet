@@ -86,6 +86,7 @@ public class ReportActivity extends AppCompatActivity {
         if (requestCode == RC_SIGN_IN) {
             if (resultCode == RESULT_OK) {
                 // Sign-in succeeded, set up the UI
+                GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_loggedin_event), this.getString(R.string.analytics_loggedin_label));
                 Toast.makeText(this, getResources().getString(R.string.signed_in), Toast.LENGTH_SHORT).show();
             }
         }
@@ -131,7 +132,6 @@ public class ReportActivity extends AppCompatActivity {
         Fabric.with(this, new Crashlytics());
 
         mFirebaseDatabase = FirebaseDatabase.getInstance();
-        // mMessagesDatabaseReference = mFirebaseDatabase.getReference().child(EMPLOYEES);
 
         mAuthStateListener = firebaseAuth -> {
             List<AuthUI.IdpConfig> providers = Arrays.asList(
@@ -142,6 +142,7 @@ public class ReportActivity extends AppCompatActivity {
             if (user != null) {
                 // User is signed in
                 onSignedInInitialize(user.getDisplayName(), user.getUid());
+
             } else {
                 // User is signed out
                 onSignedOutCleanup();
@@ -165,8 +166,7 @@ public class ReportActivity extends AppCompatActivity {
         Calendar nextYear = Calendar.getInstance();
         nextYear.add(Calendar.DATE, 1);
 
-
-        calendar.init(pastYear.getTime(), nextYear.getTime()) //
+        calendar.init(pastYear.getTime(), nextYear.getTime())
                 .inMode(CalendarPickerView.SelectionMode.RANGE)
                 .withSelectedDate(new Date());
         calendar.setTypeface(Typeface.SANS_SERIF);
@@ -184,8 +184,7 @@ public class ReportActivity extends AppCompatActivity {
                         downloadedDay = 0;
 
                         myTrace.incrementMetric("readReportStart", 1);
-                    /*Snackbar.make(view, "Reading data from server", Snackbar.LENGTH_LONG)
-                            .setAction("Remote handshake", null).show();*/
+
                         showSnackMessage(this, "Reading data from server", false, R.color.snackbar_success);
                         List<Date> selectedDays = calendar.getSelectedDates();
 
@@ -207,6 +206,8 @@ public class ReportActivity extends AppCompatActivity {
                                 if (dayCounter == maxSelectedDays - 1) {
                                     endDate = selectedDay + CALENDAR_DIVIDER + selectedMonth + CALENDAR_DIVIDER + selectedYear;
                                 }
+                                GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_selected_dates_event), "from: " + startDate + " to: " + endDate);
+
                                 if (!TextUtils.isEmpty(employerUid)) {
                                     mMessagesDatabaseReference = mFirebaseDatabase.getReference()
                                             .child(selectedYear)
@@ -226,9 +227,7 @@ public class ReportActivity extends AppCompatActivity {
     }
 
     private void attachDatabaseReadListener(int day, int maxDays) {
-        /*if (day == 0) {
-            showSpinner();
-        }*/
+
         mChildEventListener = new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String s) {
@@ -288,6 +287,7 @@ public class ReportActivity extends AppCompatActivity {
                 Log.d("report", "maxSelectedDays:" + maxSelectedDays);
                 if (downloadedDay == maxSelectedDays) {
                     //we finished downloading the last selected day
+
                     parseInfo();
                 }
             }
@@ -320,6 +320,7 @@ public class ReportActivity extends AppCompatActivity {
     }
 
     private void parseInfo() {
+        GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_parse_info_event), "parsing downloaded info of" + (staff != null ? staff.size() : 0));
         myTrace.incrementMetric("parseInformation", 1);
         AppExecutors.getInstance().diskIO().execute(() -> {
             staff = reportListDb.reportDao().loadAllReports();
@@ -330,6 +331,8 @@ public class ReportActivity extends AppCompatActivity {
 
             } else {
                 TimesheetUtil.createHTML(this, mFinalList, employerUid, startDate, endDate);
+                GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_html_report_event), "htnl created for: " + employerUid);
+
                 showSnackMessage(this, "Creating report in the cloud", false, R.color.snackbar_success);
             }
         });
@@ -351,6 +354,8 @@ public class ReportActivity extends AppCompatActivity {
     }
 
     private void showSnackMessage(final Context context, String message, boolean hideSpinner, int color) {
+        GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_snack_message_event), message);
+
         Handler handler = new Handler(Looper.getMainLooper());
         handler.post(
                 () -> {

@@ -41,7 +41,7 @@ public class NFCReadFragment extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
+        GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_read_tag_event), "NFCReadFragment shown");
         View view = inflater.inflate(R.layout.fragment_read, container, false);
         employeeListDb = AppDatabase.getInstance(getActivity());
         initViews(view);
@@ -73,12 +73,10 @@ public class NFCReadFragment extends DialogFragment {
     }
 
     public void onNfcDetectedManager(Ndef ndef) {
-
         readFromNFCManager(ndef);
     }
 
     public void onNfcDetectedStaff(Ndef ndef) {
-
         readFromNFCStaff(ndef);
     }
 
@@ -98,22 +96,6 @@ public class NFCReadFragment extends DialogFragment {
         }
     }
 
-/*    public String returnStaffName(Ndef ndef) {
-        String staffName = "";
-        try {
-            String message = getNdefMessage(ndef);
-            if (!TextUtils.isEmpty(message)) {
-                Log.d(TAG, "readFromNFCManager: " + message);
-                staffName = TimesheetUtil.getStaffName(EncodeMorseManager.getEncodedString(message));
-            }
-            return (staffName);
-
-        } catch (IOException | FormatException e) {
-            e.printStackTrace();
-            return (staffName);
-        }
-    }*/
-
     private void readFromNFCStaff(Ndef ndef) {
         try {
             String message = getNdefMessage(ndef);
@@ -132,8 +114,11 @@ public class NFCReadFragment extends DialogFragment {
                         availability = true;
                     }
                     if(getView() != null) {
+                        String greeting = !availability ? HELLO : BYE;
+                        GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_read_tag_event), uId + greeting);
+
                         Snackbar snackbar = Snackbar
-                                .make(getView(), (!availability ? HELLO : BYE), Snackbar.LENGTH_LONG);
+                                .make(getView(), greeting, Snackbar.LENGTH_LONG);
                         View snackbarView = snackbar.getView();
                         snackbarView.setBackgroundColor(Color.WHITE);
                         TextView textView = snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
@@ -145,10 +130,12 @@ public class NFCReadFragment extends DialogFragment {
                 });
 
                 mTvMessage.setText(TimesheetUtil.parseNFCMessageStaff(message));
-
+                GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_read_tag_event), uId + "-tag read success");
                 staffNameListener.onStaffDetails(name, uId, employer);
             } else {
                 mTvMessage.setText(R.string.empty_tag);
+                GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_read_tag_event), this.getString(R.string.empty_tag));
+
             }
         } catch (IOException | FormatException e) {
             e.printStackTrace();
@@ -179,10 +166,11 @@ public class NFCReadFragment extends DialogFragment {
                 mTvMessage.setText(TimesheetUtil.parseNFCMessageManager(EncodeMorseManager.getEncodedString(message)));
             } else {
                 mTvMessage.setText(R.string.empty_tag);
+                GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_read_tag_event), "getNdefMessage is empty");
+
             }
         } catch (IOException | FormatException e) {
             e.printStackTrace();
-
         }
     }
 }

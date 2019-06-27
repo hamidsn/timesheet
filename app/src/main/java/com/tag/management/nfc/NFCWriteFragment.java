@@ -53,6 +53,8 @@ public class NFCWriteFragment extends DialogFragment {
         initViews(view);
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
 
+        GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_write_tag_event), "NFCWriteFragment shown");
+
         // Create Remote Config Setting to enable developer mode.
         // Fetching configs from the server is normally limited to 5 requests per hour.
         // Enabling developer mode allows many more requests to be made per hour, so developers
@@ -95,7 +97,9 @@ public class NFCWriteFragment extends DialogFragment {
         mProgress.setVisibility(View.VISIBLE);
         try {
             if (tag == null) {
-                Toast.makeText(getActivity(), "An Error has Occurred, tag in null. Please Try Again", Toast.LENGTH_LONG).show();
+                String message = "An Error has Occurred, tag in null. Please Try Again";
+                GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_write_tag_event), message);
+                Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
             }
 
             Ndef ndef = Ndef.get(tag);
@@ -109,17 +113,20 @@ public class NFCWriteFragment extends DialogFragment {
                 NdefMessage ndefOldMessage = ndef.getNdefMessage();
                 if (ndefOldMessage != null) {
 
-
                     String message = new String(ndefOldMessage.getRecords()[0].getPayload());
                     message = EncodeMorseManager.getEncodedString(message);
                     if (this.getView() != null) {
-                        Snackbar.make(this.getView(), "Rewriting tag. Older name was " + message.split("\n")[0], Snackbar.LENGTH_LONG)
+                        String label = "Rewriting tag. Older name was " + message.split("\n")[0];
+                        GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_write_tag_event), label);
+                        Snackbar.make(this.getView(), label, Snackbar.LENGTH_LONG)
                                 .setAction("Action", null).show();
                     }
                 }
 
                 if (!ndef.isWritable()) {
-                    Toast.makeText(getActivity(), "Tag is not Writable", Toast.LENGTH_LONG).show();
+                    String message = "Tag is not Writable";
+                    Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
+                    GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_write_tag_event), message);
                     ndef.close();
                     return false;
                 }
@@ -137,6 +144,8 @@ public class NFCWriteFragment extends DialogFragment {
         } catch (Exception e) {
             Log.e("writeMessage", "Unknown issue: " + e.getMessage());
             mTvMessage.setText(getString(R.string.message_write_error));
+            GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_write_tag_event), this.getString(R.string.message_write_error));
+
             Toast.makeText(getActivity(), "Unknown issue: " + e.getMessage(), Toast.LENGTH_LONG).show();
             return false;
         }
@@ -177,6 +186,7 @@ public class NFCWriteFragment extends DialogFragment {
             if (ndefFormatable != null) {
                 ndefFormatable.connect();
                 ndefFormatable.format(ndefMessage);
+                GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_write_tag_event), "tag formatted");
                 ndefFormatable.close();
             }
 

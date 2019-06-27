@@ -150,6 +150,8 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
             if (resultCode == RESULT_OK) {
                 // Sign-in succeeded, set up the UI
                 Toast.makeText(this, getResources().getString(R.string.signed_in), Toast.LENGTH_SHORT).show();
+                GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_loggedin_event), this.getString(R.string.analytics_loggedin_label));
+
             } else if (resultCode == RESULT_CANCELED) {
                 // Sign in was canceled by the user, finish the activity
                 Toast.makeText(this, "Sign in canceled", Toast.LENGTH_SHORT).show();
@@ -184,6 +186,8 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
         }).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 downloadUrl = task.getResult();
+                GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_upload_image_event), this.getString(R.string.analytics_upload_image_label));
+
             } else {
                 // Handle failures
                 // ...
@@ -243,6 +247,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
             FirebaseUser user = firebaseAuth.getCurrentUser();
             if (user != null) {
                 // User is signed in
+
                 onSignedInInitialize(user.getDisplayName(), user.getUid());
             } else {
                 // User is signed out
@@ -263,7 +268,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
 
-            Permissions.check(this/*context*/, Manifest.permission.WRITE_EXTERNAL_STORAGE, null, new PermissionHandler() {
+            Permissions.check(this, Manifest.permission.WRITE_EXTERNAL_STORAGE, null, new PermissionHandler() {
                 @Override
                 public void onGranted() {
                     startActivityForResult(takePictureIntent, RC_PHOTO_PICKER);
@@ -424,6 +429,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
                     String messageToWrite = mEtName.getText().toString();
                     String emailAddress = mEtEmail.getText().toString();
                     String employeeTimeStamp = TimesheetUtil.generateTimeStamp();
+                    GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_upload_new_staff_event), employeeTimeStamp);
 
                     NdefRecord ndefRecord = createTextRecord(messageToWrite, employerName, employeeTimeStamp);
                     NdefMessage ndefMessage = new NdefMessage(new NdefRecord[]{ndefRecord});

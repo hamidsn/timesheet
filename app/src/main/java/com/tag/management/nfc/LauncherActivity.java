@@ -32,6 +32,8 @@ public class LauncherActivity extends AppCompatActivity {
         Fabric.with(this, new Crashlytics());
         setContentView(R.layout.activity_launcher);
 
+        //initialize analytics
+
         mFirebaseAuth = FirebaseAuth.getInstance();
 
         String STARTUP_TRACE_NAME = "nfc_launcher_trace";
@@ -48,8 +50,10 @@ public class LauncherActivity extends AppCompatActivity {
             if (user != null) {
                 // User is signed in
                 onSignedInInitialize(user.getUid());
+                GAPAnalytics.instance(this, user.getUid());
             } else {
                 // User is signed out
+                GAPAnalytics.instance(this, "");
                 startActivityForResult(
                         AuthUI.getInstance()
                                 .createSignInIntentBuilder()
@@ -86,6 +90,7 @@ public class LauncherActivity extends AppCompatActivity {
         if (requestCode == RC_SIGN_IN) {
             if (resultCode == RESULT_OK) {
                 // Sign-in succeeded, set up the UI
+                GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_loggedin_event), this.getString(R.string.analytics_loggedin_label));
                 Toast.makeText(this, getResources().getString(R.string.signed_in), Toast.LENGTH_SHORT).show();
             }
         }

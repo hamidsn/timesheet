@@ -30,6 +30,24 @@
     <string name="title_activity_report">ReportActivity</string>
     <string name="select_month">Select A Month</string>
 
+
+
+    ////// Analytics
+    <string name="analytics_loggedin_label">User is signed in</string>
+    <string name="analytics_loggedin_event">logging in</string>
+    <string name="analytics_read_tag_event">reading tags</string>
+    <string name="analytics_write_tag_event">writing tags</string>
+    <string name="analytics_snack_message_event">snack message</string>
+    <string name="analytics_selected_dates_event">selected dates</string>
+    <string name="analytics_parse_info_event">parse info</string>
+    <string name="analytics_upload_image_event">upload image</string>
+    <string name="analytics_upload_image_label">image uploaded</string>
+    <string name="analytics_upload_new_staff_event">upload staff</string>
+    <string name="analytics_in_out_event">in out</string>
+    <string name="analytics_midnight_cleanup_event">midnight cleanup</string>
+    <string name="analytics_html_report_event">html report</string>
+
+
     //// html report
     <string name="template1"><![CDATA[<!DOCTYPE html>
     <html>
