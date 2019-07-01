@@ -28,5 +28,5 @@ public interface ReportDao {
     ReportEntry loadReportByUid(String employeeUniqueId);
 
     @Query("DELETE FROM report")
-    public void nukeTable();
+    void nukeTable();
 }

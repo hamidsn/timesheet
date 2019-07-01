@@ -14,13 +14,8 @@ import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -53,6 +48,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import io.fabric.sdk.android.Fabric;
 
 // https://github.com/nabinbhandari/Android-Permissions
@@ -81,7 +78,6 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     public static final String STAFF_PHOTOS = "staff_photos";
     public static final String INIT_NFC = "initNFC";
     public static final String AUTHENTICATION = "authentication";
-    public static final String SIGNOUT = "signout";
     public static final String WRITE_2_NFC = "write2nfc";
     //public static final String UTF_8 = "UTF-8";
     private static final int RC_PHOTO_PICKER = 2;
@@ -193,13 +189,6 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
                 // ...
             }
         });
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main_menu, menu);
-        return true;
     }
 
     private void initViews() {
@@ -352,18 +341,6 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
         myTrace.stop();
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.sign_out_menu:
-                myTrace.incrementMetric(SIGNOUT,1);
-                AuthUI.getInstance().signOut(this);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
     private void onSignedInInitialize(String username, String uid) {
         employerName = username;
         employerUid = uid;
@@ -434,7 +411,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
                     NdefRecord ndefRecord = createTextRecord(messageToWrite, employerName, employeeTimeStamp);
                     NdefMessage ndefMessage = new NdefMessage(new NdefRecord[]{ndefRecord});
 
-                    myTrace.incrementMetric(WRITE_2_NFC,1);
+                    myTrace.incrementMetric(WRITE_2_NFC, 1);
                     mNfcWriteFragment = (NFCWriteFragment) getSupportFragmentManager().findFragmentByTag(NFCWriteFragment.TAG);
 
 
@@ -446,7 +423,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
 
                 } else {
 
-                    myTrace.incrementMetric(READ_FROM_NFC,1);
+                    myTrace.incrementMetric(READ_FROM_NFC, 1);
                     mNfcReadFragment = (NFCReadFragment) getSupportFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
                     Ndef ndef = Ndef.get(tag);
                     mNfcReadFragment.onNfcDetectedManager(ndef);

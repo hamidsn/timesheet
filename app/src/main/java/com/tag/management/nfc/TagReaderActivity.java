@@ -122,6 +122,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
 
     private void setupViewModel() {
         MainViewModel viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+        //todo viewModel.nukeDb();
         viewModel.getEmployees().observe(this, employeeEntries -> {
             Log.d("TAG", "Updating list of tasks from LiveData in ViewModel");
             mAdapter.setTasks(employeeEntries);
@@ -261,6 +262,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
     private void onSignedOutCleanup() {
         employerName = ANONYMOUS;
         employerUid = ANONYMOUS;
+        //todo clear db
         detachDatabaseReadListener();
     }
 
