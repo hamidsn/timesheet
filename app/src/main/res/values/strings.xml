@@ -2,6 +2,7 @@
     <string name="app_name">Timesheet management</string>
     <string name="message_write_error">Error Writing Message ! \n</string>
     <string name="message_write_success">Successfully written to Tag !</string>
+    <string name="message_unknown_issue">Unknown issue</string>
     <string name="message_write_progress">Writing to Tag..</string>
     <string name="message_tag_detected">NFC Tag Detected !</string>
     <string name="message_read_tag">Check current NFC Tag</string>
@@ -9,7 +10,10 @@
     <string name="message_tap_tag">Tap the NFC Tag to your device !</string>
     <string name="hint_message">Employee\'s full name</string>
     <string name="hint_email">Employee\'s email</string>
-    <string name="empty_tag">Tag is empty</string>
+    <string name="empty_tag">Tag is empty ot not supported</string>
+    <string name="write_tag_unable">Tag is not Writable</string>
+    <string name="rewrite_tag">Rewriting tag. Older name was</string>
+
     <string name="signed_in">Signed in!</string>
 
     <string name="sign_out">Sign Out</string>
@@ -29,7 +33,6 @@
     <string name="title_activity_tag_reader">TagReaderActivity</string>
     <string name="title_activity_report">ReportActivity</string>
     <string name="select_month">Select A Month</string>
-
 
 
     ////// Analytics
@@ -111,5 +114,7 @@
     </html>
     ]]>
 </string>
+    <string name="write_tag_error">An Error has Occurred, tag in null. Please Try Again</string>
+    <string name="format_tag_issue">Tag is not formatable</string>
 
 </resources>

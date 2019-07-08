@@ -1,14 +1,11 @@
 package com.tag.management.nfc;
 
-import androidx.fragment.app.DialogFragment;
 import android.content.Context;
 import android.graphics.Color;
 import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.tech.Ndef;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import com.google.android.material.snackbar.Snackbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
@@ -17,15 +14,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.tag.management.nfc.database.AppDatabase;
 import com.tag.management.nfc.engine.AppExecutors;
 import com.tag.management.nfc.engine.EncodeMorseManager;
 
 import java.io.IOException;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
+
 public class NFCReadFragment extends DialogFragment {
 
-    public static final String TAG = NFCReadFragment.class.getSimpleName();
+    static final String TAG = NFCReadFragment.class.getSimpleName();
     private static final String HELLO = "Hello, welcome back";
     private static final String BYE = "Bye, see you soon.";
     private TextView mTvMessage;
@@ -33,14 +35,14 @@ public class NFCReadFragment extends DialogFragment {
     private StaffListener staffNameListener;
     private AppDatabase employeeListDb;
 
-    public static NFCReadFragment newInstance() {
+    static NFCReadFragment newInstance() {
 
         return new NFCReadFragment();
     }
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_read_tag_event), "NFCReadFragment shown");
         View view = inflater.inflate(R.layout.fragment_read, container, false);
         employeeListDb = AppDatabase.getInstance(getActivity());
@@ -72,15 +74,15 @@ public class NFCReadFragment extends DialogFragment {
         fragmentDisplayedListener.onDialogDismissed();
     }
 
-    public void onNfcDetectedManager(Ndef ndef) {
+    void onNfcDetectedManager(Ndef ndef) {
         readFromNFCManager(ndef);
     }
 
-    public void onNfcDetectedStaff(Ndef ndef) {
+    void onNfcDetectedStaff(Ndef ndef) {
         readFromNFCStaff(ndef);
     }
 
-    public String returnEmployerName(Ndef ndef) {
+    String returnEmployerName(Ndef ndef) {
         String employer = "";
         try {
             String message = getNdefMessage(ndef);
@@ -113,7 +115,7 @@ public class NFCReadFragment extends DialogFragment {
                     } else {
                         availability = true;
                     }
-                    if(getView() != null) {
+                    if (getView() != null) {
                         String greeting = !availability ? HELLO : BYE;
                         GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_read_tag_event), uId + greeting);
 

@@ -1,12 +1,11 @@
 package com.tag.management.nfc.worker;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import android.util.Log;
 
 import com.tag.management.nfc.GAPAnalytics;
 import com.tag.management.nfc.TimesheetUtil;
 
+import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 

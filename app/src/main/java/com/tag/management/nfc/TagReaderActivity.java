@@ -1,27 +1,19 @@
 package com.tag.management.nfc;
 
 import android.app.PendingIntent;
-
-import androidx.fragment.app.FragmentActivity;
-import androidx.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -42,20 +34,27 @@ import com.tag.management.nfc.model.MainViewModel;
 import java.util.Arrays;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import io.fabric.sdk.android.Fabric;
 
 import static androidx.recyclerview.widget.DividerItemDecoration.VERTICAL;
 
 public class TagReaderActivity extends AppCompatActivity implements Listener, StaffListener, EmployeeAdapter.ItemClickListener {
 
-    private static final String READ_FROM_NFC = "readFromNfc";
     //public static final String DATA = "data";
     public static final String EMPLOYEES = "employees";
     public static final String INSTANCE_TASK_ID = "instanceTaskId";
+    private static final String READ_FROM_NFC = "readFromNfc";
     private static final String ANONYMOUS = "anonymous";
     private static final int RC_SIGN_IN = 1;
     // Constant for default task id to be used when not in update mode
     private static final int DEFAULT_TASK_ID = -1;
+    private static final String READ_STAFF_FROM_FB = "readStaffFromFb";
     private final String ERROR = "bad_data";
     //firebase instance variables
     private FirebaseAuth mFirebaseAuth;
@@ -70,8 +69,6 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
     private DatabaseReference mMessagesDatabaseReference;
     private ChildEventListener mChildEventListener;
     private int mTaskId = DEFAULT_TASK_ID;
-    private static final String READ_STAFF_FROM_FB = "readStaffFromFb";
-
     private EmployeeAdapter mAdapter;
 
     private AppDatabase employeeListDb;
@@ -146,7 +143,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
         if (tag != null) {
 
             if (isDialogDisplayed) {
-                myTrace.incrementMetric(READ_FROM_NFC,1);
+                myTrace.incrementMetric(READ_FROM_NFC, 1);
                 mNfcReadFragment = (NFCReadFragment) getSupportFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
                 Ndef ndef = Ndef.get(tag);
 
@@ -267,7 +264,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
     }
 
     private void attachDatabaseReadListener() {
-        myTrace.incrementMetric(READ_STAFF_FROM_FB,1);
+        myTrace.incrementMetric(READ_STAFF_FROM_FB, 1);
         mChildEventListener = new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String s) {

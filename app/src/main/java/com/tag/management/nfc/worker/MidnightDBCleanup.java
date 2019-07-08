@@ -1,13 +1,11 @@
 package com.tag.management.nfc.worker;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.tag.management.nfc.GAPAnalytics;
-import com.tag.management.nfc.R;
 import com.tag.management.nfc.TimesheetUtil;
 import com.tag.management.nfc.database.AppDatabase;
 import com.tag.management.nfc.database.DailyActivityDatabase;
@@ -16,6 +14,7 @@ import com.tag.management.nfc.database.EmployeeEntry;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
@@ -82,7 +81,7 @@ public class MidnightDBCleanup extends Worker {
 
                 List<DailyActivityEntry> staff = dailyActivityDb.dailyActivityDao().loadAllEmployees();
 
-                GAPAnalytics.sendEventGA("MidnightDBCleanup", "midnight cleanup", "DB read success: "+ employerUid);
+                GAPAnalytics.sendEventGA("MidnightDBCleanup", "midnight cleanup", "DB read success: " + employerUid);
 
                 Log.d("worker:", " DB uploading to firebase");
                 uploadStaffFB(staff);

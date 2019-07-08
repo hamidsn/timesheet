@@ -7,11 +7,6 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import androidx.annotation.NonNull;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
-import androidx.core.content.ContextCompat;
-import androidx.appcompat.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -19,6 +14,8 @@ import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -36,6 +33,7 @@ import com.tag.management.nfc.database.ReportEntry;
 import com.tag.management.nfc.engine.AppExecutors;
 import com.tag.management.nfc.model.Report;
 
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,6 +41,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import io.fabric.sdk.android.Fabric;
 
 public class ReportActivity extends AppCompatActivity {
@@ -69,6 +70,8 @@ public class ReportActivity extends AppCompatActivity {
     private String startDate, endDate;
     private ReportDatabase reportListDb;
     private FloatingActionButton fab;
+    private Date firstSelectedDay;
+    private Date lastSelectedDay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -158,7 +161,6 @@ public class ReportActivity extends AppCompatActivity {
     }
 
     private void initView() {
-        //EditText etPickADate;
         CalendarPickerView calendar = findViewById(R.id.calendar_view);
 
         Calendar pastYear = Calendar.getInstance();
@@ -187,10 +189,37 @@ public class ReportActivity extends AppCompatActivity {
 
                         showSnackMessage(this, "Reading data from server", false, R.color.snackbar_success);
                         List<Date> selectedDays = calendar.getSelectedDates();
+                        // adding days to before and after selected days
+                        Date extraDates;
+                        Calendar c = Calendar.getInstance();
+                        firstSelectedDay = selectedDays.get(0);
+                        lastSelectedDay = selectedDays.get(selectedDays.size() - 1);
+
+                        // read 15 days before and after and search for selected dates
+                        for (int i = 1; i < 15; i++) {
+                            //start searching from 14 days ago
+                            c.setTime(firstSelectedDay);
+                            c.add(Calendar.DATE, -i);
+                            extraDates = c.getTime();
+                            selectedDays.add(0, extraDates);
+                            //finish at 14 days after
+                            c.setTime(lastSelectedDay);
+                            c.add(Calendar.DATE, i);
+                            extraDates = c.getTime();
+                            selectedDays.add(extraDates);
+                        }
 
                         @SuppressLint("SimpleDateFormat") SimpleDateFormat yFormat = new SimpleDateFormat("yyyy");
                         @SuppressLint("SimpleDateFormat") SimpleDateFormat mFormat = new SimpleDateFormat("MM");
                         @SuppressLint("SimpleDateFormat") SimpleDateFormat dFormat = new SimpleDateFormat("dd");
+                        selectedYear = yFormat.format(firstSelectedDay);
+                        selectedMonth = mFormat.format(firstSelectedDay);
+                        selectedDay = dFormat.format(firstSelectedDay);
+                        startDate = selectedDay + CALENDAR_DIVIDER + selectedMonth + CALENDAR_DIVIDER + selectedYear;
+                        selectedYear = yFormat.format(lastSelectedDay);
+                        selectedMonth = mFormat.format(lastSelectedDay);
+                        selectedDay = dFormat.format(lastSelectedDay);
+                        endDate = selectedDay + CALENDAR_DIVIDER + selectedMonth + CALENDAR_DIVIDER + selectedYear;
 
                         maxSelectedDays = selectedDays.size();
                         if (!yFormat.format(selectedDays.get(0)).equals(yFormat.format(selectedDays.get(maxSelectedDays - 1)))) {
@@ -200,12 +229,7 @@ public class ReportActivity extends AppCompatActivity {
                                 selectedYear = yFormat.format(selectedDays.get(dayCounter));
                                 selectedMonth = mFormat.format(selectedDays.get(dayCounter));
                                 selectedDay = dFormat.format(selectedDays.get(dayCounter));
-                                if (dayCounter == 0) {
-                                    startDate = selectedDay + CALENDAR_DIVIDER + selectedMonth + CALENDAR_DIVIDER + selectedYear;
-                                }
-                                if (dayCounter == maxSelectedDays - 1) {
-                                    endDate = selectedDay + CALENDAR_DIVIDER + selectedMonth + CALENDAR_DIVIDER + selectedYear;
-                                }
+
                                 GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_selected_dates_event), "from: " + startDate + " to: " + endDate);
 
                                 if (!TextUtils.isEmpty(employerUid)) {
@@ -236,20 +260,25 @@ public class ReportActivity extends AppCompatActivity {
                     final ReportEntry employeeIndividual;
                     if (report != null) {
                         employeeIndividual = new ReportEntry(report.getEmployeeFullName(), report.getEmployeeTimestampIn(), report.getEmployeeTimestampOut(), report.getEmployeeUniqueId(), report.getEmployerName(), report.getId());
-                        Log.d("report", "* " + report.getEmployeeFullName());
-                        Log.d("report", "* " + report.getId());
-                        Log.d("report", "* " + report.getEmployeeTimestampIn());
-                        Log.d("report", "* " + report.getEmployeeTimestampOut());
-                        Log.d("report", "******\n");
 
                     } else {
                         employeeIndividual = new ReportEntry(ERROR, ERROR, ERROR, ERROR, ERROR, 0);
                     }
+                    Timestamp downloadedTime = TimesheetUtil.convertStringToTimestamp(employeeIndividual.getEmployeeTimestampIn(), selectedYear);
 
                     // check if employee is not in DB then add it
                     AppExecutors.getInstance().diskIO().execute(() -> {
+                        Calendar c = Calendar.getInstance();
+                        c.setTime(firstSelectedDay);
+                        int firstDay = c.get(Calendar.DAY_OF_MONTH);
+                        c.setTime(lastSelectedDay);
+                        int lastDay = c.get(Calendar.DAY_OF_MONTH);
+                        c.setTimeInMillis(downloadedTime.getTime());
+                        int downloadDay = c.get(Calendar.DAY_OF_MONTH);
 
-                        if (!TextUtils.isEmpty(employeeIndividual.getEmployerName())) {
+                        if (!TextUtils.isEmpty(employeeIndividual.getEmployerName())
+                                && (downloadedTime.after(firstSelectedDay) || firstDay == downloadDay)
+                                && (downloadedTime.before(lastSelectedDay) || lastDay == downloadDay)) {
                             reportListDb.reportDao().insertReport(employeeIndividual);
                         }
 
@@ -279,15 +308,11 @@ public class ReportActivity extends AppCompatActivity {
 
         mMessagesDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                System.out.println("We're done loading the initial " + dataSnapshot.getChildrenCount() + " items");
+                Log.d("onDataChange", "We're done loading the initial " + dataSnapshot.getChildrenCount() + " items");
                 downloadedDay += 1;
                 staffNumber += dataSnapshot.getChildrenCount();
-                Log.d("report", "staffNumber:" + staffNumber);
-                Log.d("report", "downloadedDay:" + downloadedDay);
-                Log.d("report", "maxSelectedDays:" + maxSelectedDays);
                 if (downloadedDay == maxSelectedDays) {
                     //we finished downloading the last selected day
-
                     parseInfo();
                 }
             }

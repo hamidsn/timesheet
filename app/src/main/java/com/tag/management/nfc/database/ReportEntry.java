@@ -1,9 +1,9 @@
 package com.tag.management.nfc.database;
 
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
-import androidx.annotation.NonNull;
 
 @Entity(tableName = "report")
 public class ReportEntry {

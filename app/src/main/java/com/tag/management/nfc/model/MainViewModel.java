@@ -1,14 +1,15 @@
 package com.tag.management.nfc.model;
 
 import android.app.Application;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
 import android.util.Log;
 
 import com.tag.management.nfc.database.AppDatabase;
 import com.tag.management.nfc.database.EmployeeEntry;
 
 import java.util.List;
+
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 
 public class MainViewModel extends AndroidViewModel {
 

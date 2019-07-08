@@ -1,12 +1,13 @@
 package com.tag.management.nfc.database;
 
-import androidx.room.Database;
-import androidx.room.Room;
-import androidx.room.RoomDatabase;
 import android.content.Context;
 import android.util.Log;
 
 import com.tag.management.nfc.TimesheetUtil;
+
+import androidx.room.Database;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
 
 @Database(entities = {DailyActivityEntry.class}, version = 13, exportSchema = false)
 public abstract class DailyActivityDatabase extends RoomDatabase {
@@ -26,7 +27,7 @@ public abstract class DailyActivityDatabase extends RoomDatabase {
                         .build();
             }
             //TimesheetUtil.applyDailyWorker(context);
-                TimesheetUtil.applyOnceoffWorker();
+            TimesheetUtil.applyOnceoffWorker();
             /*WorkManager workerInstance = WorkManager.getInstance();
             //run once off workers
             OneTimeWorkRequest midnightWorkRequest =

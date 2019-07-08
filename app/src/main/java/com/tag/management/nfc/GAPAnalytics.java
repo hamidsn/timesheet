@@ -13,7 +13,7 @@ public class GAPAnalytics {
     static FirebaseAnalytics instance(Context context, String uid) {
         if (mFirebaseAnalytics == null) {
             mFirebaseAnalytics = FirebaseAnalytics.getInstance(context);
-            mFirebaseAnalytics.setUserProperty("user_id",uid.isEmpty() ? "empty_uid" : uid);
+            mFirebaseAnalytics.setUserProperty("user_id", uid.isEmpty() ? "empty_uid" : uid);
         }
         return mFirebaseAnalytics;
     }
@@ -24,7 +24,7 @@ public class GAPAnalytics {
         params.putString("eventCategory", eventCategory);
         params.putString("eventAction", eventAction);
         params.putString("eventLabel", eventLabel);
-        if(mFirebaseAnalytics != null){
+        if (mFirebaseAnalytics != null) {
             mFirebaseAnalytics.logEvent("share_image", params);
         }
 

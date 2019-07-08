@@ -15,6 +15,7 @@ import com.google.firebase.perf.metrics.Trace;
 import java.util.Arrays;
 import java.util.List;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import io.fabric.sdk.android.Fabric;
 
@@ -39,6 +40,7 @@ public class LauncherActivity extends AppCompatActivity {
         Trace myTrace = FirebasePerformance.getInstance().newTrace(STARTUP_TRACE_NAME);
         myTrace.start();
         Fabric.with(this, new Crashlytics());
+        ActionBar actionBar = getSupportActionBar();
 
         mAuthStateListener = firebaseAuth -> {
             List<AuthUI.IdpConfig> providers = Arrays.asList(
@@ -50,6 +52,9 @@ public class LauncherActivity extends AppCompatActivity {
                 // User is signed in
                 onSignedInInitialize(user.getUid());
                 GAPAnalytics.instance(this, user.getUid());
+                if (actionBar != null) {
+                    actionBar.setTitle(user.getDisplayName());
+                }
             } else {
                 // User is signed out
                 GAPAnalytics.instance(this, "");

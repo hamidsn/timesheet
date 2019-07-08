@@ -97,7 +97,7 @@ public class NFCWriteFragment extends DialogFragment {
         mProgress.setVisibility(View.VISIBLE);
         try {
             if (tag == null) {
-                String message = "An Error has Occurred, tag in null. Please Try Again";
+                String message = getString(R.string.write_tag_error);
                 GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_write_tag_event), message);
                 Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
             }
@@ -116,7 +116,7 @@ public class NFCWriteFragment extends DialogFragment {
                     String message = new String(ndefOldMessage.getRecords()[0].getPayload());
                     message = EncodeMorseManager.getEncodedString(message);
                     if (this.getView() != null) {
-                        String label = "Rewriting tag. Older name was " + message.split("\n")[0];
+                        String label = getString(R.string.rewrite_tag) + message.split("\n")[0];
                         GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_write_tag_event), label);
                         Snackbar.make(this.getView(), label, Snackbar.LENGTH_LONG)
                                 .setAction("Action", null).show();
@@ -124,7 +124,7 @@ public class NFCWriteFragment extends DialogFragment {
                 }
 
                 if (!ndef.isWritable()) {
-                    String message = "Tag is not Writable";
+                    String message = getString(R.string.write_tag_unable);
                     Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
                     GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_write_tag_event), message);
                     ndef.close();
@@ -146,7 +146,7 @@ public class NFCWriteFragment extends DialogFragment {
             mTvMessage.setText(getString(R.string.message_write_error));
             GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_write_tag_event), this.getString(R.string.message_write_error));
 
-            Toast.makeText(getActivity(), "Unknown issue: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), getString(R.string.message_unknown_issue) + e.getMessage(), Toast.LENGTH_LONG).show();
             return false;
         }
         mProgress.setVisibility(View.GONE);
@@ -180,7 +180,7 @@ public class NFCWriteFragment extends DialogFragment {
             NdefFormatable ndefFormatable = NdefFormatable.get(tag);
 
             if (ndefFormatable == null) {
-                Toast.makeText(getActivity(), "Tag is not formatable", Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity(), getString(R.string.format_tag_issue), Toast.LENGTH_LONG).show();
             }
 
             if (ndefFormatable != null) {

@@ -1,10 +1,9 @@
 package com.tag.management.nfc.model;
 
+import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
-import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
-import androidx.annotation.NonNull;
 
 @Entity(tableName = "report")
 public class Report {
@@ -15,7 +14,7 @@ public class Report {
     @ColumnInfo(name = "employeeFullName")
     private String employeeFullName;
 
-     @ColumnInfo(name = "employeeTimestampIn")
+    @ColumnInfo(name = "employeeTimestampIn")
     private String employeeTimestampIn;
 
     @ColumnInfo(name = "employeeTimestampOut")

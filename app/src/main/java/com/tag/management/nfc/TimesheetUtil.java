@@ -10,7 +10,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.provider.MediaStore;
-import androidx.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Patterns;
@@ -41,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import androidx.annotation.NonNull;
 import androidx.work.BackoffPolicy;
 import androidx.work.Data;
 import androidx.work.ExistingPeriodicWorkPolicy;
@@ -64,6 +64,7 @@ public class TimesheetUtil {
     private static final String TITLE = "Title";
     private static final String newLine = "\n";
     private static final String PATTERN_CURRENT = "EEE dd MMM HH:mm";
+    private static final String PATTERN_CONVERT = "EEE dd MMM HH:mm yyyy";
     private static final String PATTERN_MONTH = "MM";
     private static final String PATTERN_DAY = "dd";
     private static final String PATTERN_YEAR = "yyyy";
@@ -71,7 +72,7 @@ public class TimesheetUtil {
     private static final String EMPLOYER_UID_INFO = "employer_uid_info";
     private static final String PREF_EMPLOYER_UID = "pref_employer_uid";
     public static boolean isDoing = false;
-    public static String employerUid = "";
+    private static String employerUid = "";
     private static Long totalMinutes = 0L;
 
     static boolean isEmailValid(String email) {
@@ -304,7 +305,8 @@ public class TimesheetUtil {
         List<ReportEntry> mFinalList = new ArrayList<>();
 
         for (int i = 0; i < staff.size(); i++) {
-            if (staff.get(i).getEmployeeTimestampIn().contains("-")) {
+
+            if (!TextUtils.isEmpty(staff.get(i).getEmployeeTimestampIn()) && staff.get(i).getEmployeeTimestampIn().contains("-")) {
                 String[] splittedTimestampIn = staff.get(i).getEmployeeTimestampIn().split("-");
                 String[] splittedTimestampOut = staff.get(i).getEmployeeTimestampOut().split("-");
                 for (int j = 0; j < splittedTimestampIn.length; j++) {
@@ -362,7 +364,7 @@ public class TimesheetUtil {
         Log.d("html", "" + htmlDocument);
     }
 
-    static String calculateTimeBetween(String timestampIn, String timestampOut) {
+    private static String calculateTimeBetween(String timestampIn, String timestampOut) {
         Timestamp in = convertStringToTimestamp(timestampIn);
         Timestamp out = convertStringToTimestamp(timestampOut);
         boolean validTiming = (in != null && out != null);
@@ -388,7 +390,7 @@ public class TimesheetUtil {
 
     //this is used to create report
     @SuppressLint("SimpleDateFormat")
-    private static Timestamp convertStringToTimestamp(String str_date) {
+    static Timestamp convertStringToTimestamp(String str_date) {
         java.sql.Timestamp timeStampDate;
         try {
             DateFormat formatter;
@@ -396,7 +398,22 @@ public class TimesheetUtil {
             Date date = formatter.parse(str_date);
             timeStampDate = new Timestamp(date.getTime());
         } catch (ParseException e) {
-            System.out.println("Exception :" + e);
+            Log.d("ParseException","Exception :" + e);
+            timeStampDate = null;
+        }
+        return timeStampDate;
+    }
+
+    @SuppressLint("SimpleDateFormat")
+    static Timestamp convertStringToTimestamp(String str_date, String year) {
+        java.sql.Timestamp timeStampDate;
+        try {
+            DateFormat formatter;
+            formatter = new SimpleDateFormat(PATTERN_CONVERT);
+            Date date = formatter.parse(str_date.split("-")[0] + " " + year);
+            timeStampDate = new Timestamp(date.getTime());
+        } catch (ParseException e) {
+            Log.d("ParseException","Exception :" + e);
             timeStampDate = null;
         }
         return timeStampDate;
