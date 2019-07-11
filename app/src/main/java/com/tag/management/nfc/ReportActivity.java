@@ -12,6 +12,10 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
 import com.crashlytics.android.Crashlytics;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -41,9 +45,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import io.fabric.sdk.android.Fabric;
 
 public class ReportActivity extends AppCompatActivity {
@@ -171,6 +172,7 @@ public class ReportActivity extends AppCompatActivity {
         calendar.init(pastYear.getTime(), nextYear.getTime())
                 .inMode(CalendarPickerView.SelectionMode.RANGE)
                 .withSelectedDate(new Date());
+
         calendar.setTypeface(Typeface.SANS_SERIF);
 
         fab = findViewById(R.id.fab);
@@ -222,7 +224,8 @@ public class ReportActivity extends AppCompatActivity {
                         endDate = selectedDay + CALENDAR_DIVIDER + selectedMonth + CALENDAR_DIVIDER + selectedYear;
 
                         maxSelectedDays = selectedDays.size();
-                        if (!yFormat.format(selectedDays.get(0)).equals(yFormat.format(selectedDays.get(maxSelectedDays - 1)))) {
+                        //ignore 14 daysart added days from beginning and end.
+                        if (!yFormat.format(selectedDays.get(14)).equals(yFormat.format(selectedDays.get(maxSelectedDays - 15)))) {
                             showSnackMessage(this, "Sorry, report from two different years are not accepted.", true, R.color.snackbar_error);
                         } else {
                             for (int dayCounter = 0; dayCounter < maxSelectedDays; dayCounter++) {

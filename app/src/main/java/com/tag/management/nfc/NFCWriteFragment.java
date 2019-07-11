@@ -15,6 +15,11 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
+
+import com.airbnb.lottie.LottieAnimationView;
 import com.creativityapps.gmailbackgroundlibrary.BackgroundMail;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
@@ -24,10 +29,6 @@ import com.tag.management.nfc.engine.EncodeMorseManager;
 import java.util.HashMap;
 import java.util.Map;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
-
 public class NFCWriteFragment extends DialogFragment {
 
     static final String TAG = NFCWriteFragment.class.getSimpleName();
@@ -36,6 +37,7 @@ public class NFCWriteFragment extends DialogFragment {
     private static final String EMAIL_FAILED = "Email failed";
     private static final String EMAIL_SENT = "Email sent";
     private TextView mTvMessage;
+    private LottieAnimationView lottieAnimation;
     private ProgressBar mProgress;
     private Listener mListener;
     private boolean send_email = false;
@@ -77,6 +79,7 @@ public class NFCWriteFragment extends DialogFragment {
 
         mTvMessage = view.findViewById(R.id.tv_message);
         mProgress = view.findViewById(R.id.progress);
+        lottieAnimation = view.findViewById(R.id.lottie_read);
     }
 
     @Override
@@ -134,6 +137,7 @@ public class NFCWriteFragment extends DialogFragment {
                 ndef.writeNdefMessage(ndefMessage);
                 ndef.close();
                 mTvMessage.setText(getString(R.string.message_write_success));
+                lottieAnimation.cancelAnimation();
                 if (send_email) {
                     sendEmail(emailAddress, messageToWrite + " " + employerName);
                 }
@@ -141,12 +145,11 @@ public class NFCWriteFragment extends DialogFragment {
             }
 
             mTvMessage.setText(getString(R.string.message_write_success));
+            lottieAnimation.cancelAnimation();
         } catch (Exception e) {
             Log.e("writeMessage", "Unknown issue: " + e.getMessage());
             mTvMessage.setText(getString(R.string.message_write_error));
             GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_write_tag_event), this.getString(R.string.message_write_error));
-
-            Toast.makeText(getActivity(), getString(R.string.message_unknown_issue) + e.getMessage(), Toast.LENGTH_LONG).show();
             return false;
         }
         mProgress.setVisibility(View.GONE);

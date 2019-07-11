@@ -96,6 +96,9 @@ dependencies {
 
     //calendar
     implementation 'com.savvi.datepicker:rangepicker:1.2.0'
+
+    //lottie animation
+    implementation 'com.airbnb.android:lottie:3.0.7'
 }
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.firebase-perf'

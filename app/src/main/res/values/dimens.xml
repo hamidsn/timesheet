@@ -4,4 +4,6 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="snackbar_margin">40dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
+
+    <dimen name="text_big">22sp</dimen>
 </resources>

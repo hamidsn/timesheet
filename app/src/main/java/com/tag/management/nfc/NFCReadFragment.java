@@ -14,6 +14,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
+
+import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.tag.management.nfc.database.AppDatabase;
 import com.tag.management.nfc.engine.AppExecutors;
@@ -21,16 +26,13 @@ import com.tag.management.nfc.engine.EncodeMorseManager;
 
 import java.io.IOException;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
-
 public class NFCReadFragment extends DialogFragment {
 
     static final String TAG = NFCReadFragment.class.getSimpleName();
     private static final String HELLO = "Hello, welcome back";
     private static final String BYE = "Bye, see you soon.";
     private TextView mTvMessage;
+    private LottieAnimationView lottieAnimation;
     private Listener fragmentDisplayedListener;
     private StaffListener staffNameListener;
     private AppDatabase employeeListDb;
@@ -53,6 +55,7 @@ public class NFCReadFragment extends DialogFragment {
     private void initViews(View view) {
 
         mTvMessage = view.findViewById(R.id.tv_message);
+        lottieAnimation = view.findViewById(R.id.lottie_read);
     }
 
     @Override
@@ -132,12 +135,12 @@ public class NFCReadFragment extends DialogFragment {
                 });
 
                 mTvMessage.setText(TimesheetUtil.parseNFCMessageStaff(message));
+                lottieAnimation.cancelAnimation();
                 GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_read_tag_event), uId + "-tag read success");
                 staffNameListener.onStaffDetails(name, uId, employer);
             } else {
                 mTvMessage.setText(R.string.empty_tag);
                 GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_read_tag_event), this.getString(R.string.empty_tag));
-
             }
         } catch (IOException | FormatException e) {
             e.printStackTrace();

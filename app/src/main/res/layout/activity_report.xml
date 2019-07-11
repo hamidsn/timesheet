@@ -16,7 +16,8 @@
         android:paddingBottom="16dp"
         android:scrollbarStyle="outsideOverlay"
         app:tsquare_dividerColor="@color/calendar_divider"
-        app:tsquare_headerTextColor="@color/fui_bgEmail" />
+        app:tsquare_headerTextColor="@color/fui_bgEmail"
+        app:tsquare_titleTextColor="@color/colorAccent"/>
 
     <RelativeLayout
         android:id="@+id/loadingPanel"
