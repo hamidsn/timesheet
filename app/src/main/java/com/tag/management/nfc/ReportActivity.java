@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.crashlytics.android.Crashlytics;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -163,7 +164,6 @@ public class ReportActivity extends AppCompatActivity {
 
     private void initView() {
         CalendarPickerView calendar = findViewById(R.id.calendar_view);
-
         Calendar pastYear = Calendar.getInstance();
         pastYear.add(Calendar.YEAR, -2);
         Calendar nextYear = Calendar.getInstance();

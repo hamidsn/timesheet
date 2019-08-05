@@ -74,7 +74,7 @@ public class MidnightDBCleanup extends Worker {
 
             // midnight DB clean up
             Log.d("worker:", " DB cleaning worker is running");
-            {
+
                 dailyActivityDb = DailyActivityDatabase.getInstance(getApplicationContext());
                 employeeListDb = AppDatabase.getInstance(getApplicationContext());
                 Log.d("worker:", " DB getting all staff");
@@ -87,7 +87,7 @@ public class MidnightDBCleanup extends Worker {
                 uploadStaffFB(staff);
                 TimesheetUtil.isDoing = false;
                 return Result.success();
-            }
+
         }
     }
 
