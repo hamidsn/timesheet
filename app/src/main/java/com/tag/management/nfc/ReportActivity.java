@@ -45,6 +45,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import io.fabric.sdk.android.Fabric;
 
@@ -211,9 +212,9 @@ public class ReportActivity extends AppCompatActivity {
                             selectedDays.add(extraDates);
                         }
 
-                        @SuppressLint("SimpleDateFormat") SimpleDateFormat yFormat = new SimpleDateFormat("yyyy");
-                        @SuppressLint("SimpleDateFormat") SimpleDateFormat mFormat = new SimpleDateFormat("MM");
-                        @SuppressLint("SimpleDateFormat") SimpleDateFormat dFormat = new SimpleDateFormat("dd");
+                        @SuppressLint("SimpleDateFormat") SimpleDateFormat yFormat = new SimpleDateFormat("yyyy", Locale.ENGLISH);
+                        @SuppressLint("SimpleDateFormat") SimpleDateFormat mFormat = new SimpleDateFormat("MM", Locale.ENGLISH);
+                        @SuppressLint("SimpleDateFormat") SimpleDateFormat dFormat = new SimpleDateFormat("dd", Locale.ENGLISH);
                         selectedYear = yFormat.format(firstSelectedDay);
                         selectedMonth = mFormat.format(firstSelectedDay);
                         selectedDay = dFormat.format(firstSelectedDay);

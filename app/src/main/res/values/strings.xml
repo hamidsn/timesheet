@@ -10,9 +10,11 @@
     <string name="message_tap_tag">Tap the NFC Tag to your device !</string>
     <string name="hint_message">Employee\'s full name</string>
     <string name="hint_email">Employee\'s email</string>
-    <string name="empty_tag">Tag is empty ot not supported</string>
+    <string name="empty_tag">Tag is empty or not supported</string>
     <string name="write_tag_unable">Tag is not Writable</string>
     <string name="rewrite_tag">Rewriting tag. Older name was</string>
+    <string name="manager_tag">staff smart easy</string>
+
 
     <string name="signed_in">Signed in!</string>
 

@@ -34,6 +34,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -63,8 +64,8 @@ public class TimesheetUtil {
     private static final String REGISTEREDAT = "Registered at ";
     private static final String TITLE = "Title";
     private static final String newLine = "\n";
-    private static final String PATTERN_CURRENT = "EEE dd MMM HH:mm";
-    private static final String PATTERN_CONVERT = "EEE dd MMM HH:mm yyyy";
+    private static final String PATTERN_CURRENT = "EEE. dd MMM. HH:mm";
+    private static final String PATTERN_CONVERT = "EEE. dd MMM. HH:mm yyyy";
     private static final String PATTERN_MONTH = "MM";
     private static final String PATTERN_DAY = "dd";
     private static final String PATTERN_YEAR = "yyyy";
@@ -136,7 +137,7 @@ public class TimesheetUtil {
     private static String getActualTime(String s) {
         long timeStamp = Long.parseLong(s) * 1000L;
         try {
-            @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat(PATTERN_REGISTRATION);
+            @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat(PATTERN_REGISTRATION, Locale.ENGLISH);
             Date netDate = (new Date(timeStamp));
             return sdf.format(netDate);
         } catch (Exception ex) {
@@ -147,28 +148,28 @@ public class TimesheetUtil {
     static String getCurrentTimeUsingCalendar() {
         Calendar cal = Calendar.getInstance();
         Date date = cal.getTime();
-        @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat(PATTERN_CURRENT);
+        @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat(PATTERN_CURRENT, Locale.ENGLISH);
         return dateFormat.format(date);
     }
 
     public static String getCurrentMonthUsingCalendar() {
         Calendar cal = Calendar.getInstance();
         Date date = cal.getTime();
-        @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat(PATTERN_MONTH);
+        @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat(PATTERN_MONTH, Locale.ENGLISH);
         return dateFormat.format(date);
     }
 
     public static String getCurrentDayUsingCalendar() {
         Calendar cal = Calendar.getInstance();
         Date date = cal.getTime();
-        @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat(PATTERN_DAY);
+        @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat(PATTERN_DAY, Locale.ENGLISH);
         return dateFormat.format(date);
     }
 
     public static String getCurrentYearUsingCalendar() {
         Calendar cal = Calendar.getInstance();
         Date date = cal.getTime();
-        @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat(PATTERN_YEAR);
+        @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat(PATTERN_YEAR, Locale.ENGLISH);
         return dateFormat.format(date);
     }
 
@@ -394,7 +395,7 @@ public class TimesheetUtil {
         java.sql.Timestamp timeStampDate;
         try {
             DateFormat formatter;
-            formatter = new SimpleDateFormat(PATTERN_CURRENT);
+            formatter = new SimpleDateFormat(PATTERN_CURRENT, Locale.ENGLISH);
             Date date = formatter.parse(str_date);
             timeStampDate = new Timestamp(date.getTime());
         } catch (ParseException e) {
@@ -407,13 +408,21 @@ public class TimesheetUtil {
     @SuppressLint("SimpleDateFormat")
     static Timestamp convertStringToTimestamp(String str_date, String year) {
         java.sql.Timestamp timeStampDate;
+        Date date;
+        DateFormat formatter;
+        formatter = new SimpleDateFormat(PATTERN_CONVERT, Locale.ENGLISH);
         try {
-            DateFormat formatter;
-            formatter = new SimpleDateFormat(PATTERN_CONVERT);
-            Date date = formatter.parse(str_date.split("-")[0] + " " + year);
+            date = formatter.parse(str_date.split("-")[0] + " " + year);
             timeStampDate = new Timestamp(date.getTime());
         } catch (ParseException e) {
             Log.d("ParseException","Exception :" + e);
+            /*try {
+                date = formatter.parse(str_date.split("-")[0].replace(".", "") + " " + year);
+                timeStampDate = new Timestamp(date.getTime());
+            } catch (ParseException e1) {
+                e1.printStackTrace();
+                timeStampDate = null;
+            }*/
             timeStampDate = null;
         }
         return timeStampDate;

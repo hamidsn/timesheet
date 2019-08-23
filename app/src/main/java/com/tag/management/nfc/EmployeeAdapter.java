@@ -24,13 +24,13 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
 import com.tag.management.nfc.database.EmployeeEntry;
 
 import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * This EmployeeAdapter creates and binds ViewHolders, that hold the description and priority of a task,
@@ -83,12 +83,12 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
         String name = taskEntry.getEmployeeFullName();
         String imageUrl = taskEntry.getEmployeeDownloadUrl();
         String updatedAt = TimesheetUtil.getCurrentTimeUsingCalendar();
-        boolean availablity = taskEntry.isEmployeeAvailable();
+        boolean availability = taskEntry.isEmployeeAvailable();
 
         //Set values
         holder.employeeName.setText(name);
         holder.updatedAtView.setText(updatedAt);
-        holder.layer.setAlpha((float) (availablity ? 1.0 : 0.2));
+        holder.layer.setAlpha((float) (availability ? 1.0 : 0.2));
 
         if (!imageUrl.isEmpty()) {
             Glide.with(holder.employeePic.getContext())
@@ -118,7 +118,9 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
     }
 
     public interface ItemClickListener {
-        void onItemClickListener(String itemId);
+        // void onItemClickListener(String itemId);
+        void onItemClickListener(String name, String uId, String employer);
+
     }
 
     // Inner class for creating ViewHolders
@@ -147,8 +149,7 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
 
         @Override
         public void onClick(View view) {
-            String elementId = mTaskEntries.get(getAdapterPosition()).getEmployeeUniqueId();
-            mItemClickListener.onItemClickListener(elementId);
+            mItemClickListener.onItemClickListener(mTaskEntries.get(getAdapterPosition()).getEmployeeFullName(), mTaskEntries.get(getAdapterPosition()).getEmployeeUniqueId(), mTaskEntries.get(getAdapterPosition()).getEmployerName());
         }
     }
 }

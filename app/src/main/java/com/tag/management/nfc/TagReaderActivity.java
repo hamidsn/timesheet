@@ -1,5 +1,6 @@
 package com.tag.management.nfc;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -10,6 +11,13 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.crashlytics.android.Crashlytics;
 import com.firebase.ui.auth.AuthUI;
@@ -34,12 +42,6 @@ import com.tag.management.nfc.model.MainViewModel;
 import java.util.Arrays;
 import java.util.List;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProviders;
-import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import io.fabric.sdk.android.Fabric;
 
 import static androidx.recyclerview.widget.DividerItemDecoration.VERTICAL;
@@ -70,6 +72,8 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
     private ChildEventListener mChildEventListener;
     private int mTaskId = DEFAULT_TASK_ID;
     private EmployeeAdapter mAdapter;
+    private RecyclerView mRecyclerView;
+    private boolean manualMode;
 
     private AppDatabase employeeListDb;
     private DailyActivityDatabase dailyActivityDb;
@@ -102,7 +106,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
     }
 
     private void initView() {
-        RecyclerView mRecyclerView = findViewById(R.id.recyclerViewTasks);
+        mRecyclerView = findViewById(R.id.recyclerViewTasks);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mAdapter = new EmployeeAdapter(this, this);
         mRecyclerView.setAdapter(mAdapter);
@@ -119,11 +123,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
 
     private void setupViewModel() {
         MainViewModel viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
-        //todo viewModel.nukeDb();
-        viewModel.getEmployees().observe(this, employeeEntries -> {
-            Log.d("TAG", "Updating list of tasks from LiveData in ViewModel");
-            mAdapter.setTasks(employeeEntries);
-        });
+        viewModel.getEmployees().observe(this, employeeEntries -> mAdapter.setTasks(employeeEntries));
     }
 
     private void showReadFragment() {
@@ -136,6 +136,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
         mNfcReadFragment.show(getSupportFragmentManager(), NFCReadFragment.TAG);
     }
 
+    @SuppressLint("ResourceAsColor")
     @Override
     protected void onNewIntent(Intent intent) {
         Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
@@ -148,7 +149,16 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
                 Ndef ndef = Ndef.get(tag);
 
                 String tagEmployer = mNfcReadFragment.returnEmployerName(ndef);
-                if (appEmployer.toLowerCase().equals(tagEmployer.toLowerCase())) {
+                //todo create a proper email and name
+                if (this.getString(R.string.manager_tag).equals(tagEmployer.toLowerCase())) {
+                    //manager wants to make change
+                    mRecyclerView.setBackgroundColor(R.color.colorAccent);
+                    manualMode = true;
+                    if (mNfcReadFragment != null) {
+                        mNfcReadFragment.dismiss();
+                    }
+
+                } else if (appEmployer.toLowerCase().equals(tagEmployer.toLowerCase())) {
                     mNfcReadFragment.onNfcDetectedStaff(ndef);
 
                 } else {
@@ -311,9 +321,15 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
     }
 
     @Override
-    public void onItemClickListener(String itemId) {
+    public void onItemClickListener(String staffName, String staffUid, String employerName) {
         // Launch AddTaskActivity adding the itemId as an extra in the intent
         //todo, change manual
+        if (manualMode) {
+            onStaffDetails(staffName, staffUid, employerName);
+            manualMode = false;
+            mRecyclerView.setBackground(null);
+        }
+
     }
 
     private void updateStaffAvailability(String uId, boolean availability) {
@@ -327,7 +343,6 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
 
     @Override
     public void onStaffDetails(String name, String uId, String employer) {
-        //employeeIndividual = new DailyActivityEntry(employer, name,   TimesheetUtil.getCurrentTimeUsingCalendar(), TimesheetUtil.getCurrentTimeUsingCalendar(), uId);
 
         AppExecutors.getInstance().diskIO().execute(() -> {
             DailyActivityEntry employeeIndividual = null;
