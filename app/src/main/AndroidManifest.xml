@@ -29,7 +29,8 @@
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
 
-        <activity android:name=".LauncherActivity">
+        <activity android:name=".LauncherActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -48,11 +49,13 @@
         <activity
             android:name=".TagReaderActivity"
             android:label="@string/title_activity_tag_reader"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
             android:name=".ReportActivity"
             android:label="@string/title_activity_report"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
     </application>

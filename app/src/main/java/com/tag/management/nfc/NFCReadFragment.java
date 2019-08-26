@@ -1,6 +1,8 @@
 package com.tag.management.nfc;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.nfc.FormatException;
 import android.nfc.NdefMessage;
@@ -56,6 +58,15 @@ public class NFCReadFragment extends DialogFragment {
 
         mTvMessage = view.findViewById(R.id.tv_message);
         lottieAnimation = view.findViewById(R.id.lottie_read);
+    }
+
+    @Override
+    public void onDismiss(final DialogInterface dialog) {
+        super.onDismiss(dialog);
+        final Activity activity = getActivity();
+        if (activity instanceof DialogInterface.OnDismissListener) {
+            ((DialogInterface.OnDismissListener) activity).onDismiss(dialog);
+        }
     }
 
     @Override

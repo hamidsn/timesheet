@@ -14,6 +14,16 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.Patterns;
 
+import androidx.annotation.NonNull;
+import androidx.work.BackoffPolicy;
+import androidx.work.Data;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
+
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -40,16 +50,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import androidx.annotation.NonNull;
-import androidx.work.BackoffPolicy;
-import androidx.work.Data;
-import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.ExistingWorkPolicy;
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkInfo;
-import androidx.work.WorkManager;
 
 public class TimesheetUtil {
     private static final String WORKERTAG = "HAMID";
@@ -399,7 +399,7 @@ public class TimesheetUtil {
             Date date = formatter.parse(str_date);
             timeStampDate = new Timestamp(date.getTime());
         } catch (ParseException e) {
-            Log.d("ParseException","Exception :" + e);
+            Log.d("ParseException", "Exception :" + e);
             timeStampDate = null;
         }
         return timeStampDate;
@@ -415,7 +415,7 @@ public class TimesheetUtil {
             date = formatter.parse(str_date.split("-")[0] + " " + year);
             timeStampDate = new Timestamp(date.getTime());
         } catch (ParseException e) {
-            Log.d("ParseException","Exception :" + e);
+            Log.d("ParseException", "Exception :" + e);
             /*try {
                 date = formatter.parse(str_date.split("-")[0].replace(".", "") + " " + year);
                 timeStampDate = new Timestamp(date.getTime());
@@ -470,6 +470,22 @@ public class TimesheetUtil {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
+    public static boolean isEncodable(String input) {
+        String specialChars = "@/='()-_!?:;,.ßÜÖÄ";
+        char currentCharacter;
+        boolean isEncodable = true;
+
+        for (int i = 0; i < input.length(); i++) {
+            currentCharacter = input.charAt(i);
+
+            if (!(Character.isDigit(currentCharacter)
+                    || Character.isUpperCase(currentCharacter)
+                    || Character.isLowerCase(currentCharacter)
+                    || specialChars.contains(String.valueOf(currentCharacter)))) {
+
+                isEncodable = false;
+            }
+        }
+        return isEncodable;
+    }
 }
-
-

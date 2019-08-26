@@ -2,6 +2,7 @@ package com.tag.management.nfc;
 
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
@@ -10,6 +11,7 @@ import android.nfc.tech.Ndef;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -46,7 +48,7 @@ import io.fabric.sdk.android.Fabric;
 
 import static androidx.recyclerview.widget.DividerItemDecoration.VERTICAL;
 
-public class TagReaderActivity extends AppCompatActivity implements Listener, StaffListener, EmployeeAdapter.ItemClickListener {
+public class TagReaderActivity extends AppCompatActivity implements  DialogInterface.OnDismissListener, Listener, StaffListener, EmployeeAdapter.ItemClickListener {
 
     //public static final String DATA = "data";
     public static final String EMPLOYEES = "employees";
@@ -74,6 +76,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
     private EmployeeAdapter mAdapter;
     private RecyclerView mRecyclerView;
     private boolean manualMode;
+    private ImageView arrow;
 
     private AppDatabase employeeListDb;
     private DailyActivityDatabase dailyActivityDb;
@@ -118,6 +121,8 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> showReadFragment());
+        arrow = findViewById(R.id.arrowLeft);
+        arrow.setAlpha(0.15f);
         setupViewModel();
     }
 
@@ -128,6 +133,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
 
     private void showReadFragment() {
         GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_in_out_event), this.getString(R.string.analytics_in_out_event));
+        arrow.setAlpha(1.0f);
 
         mNfcReadFragment = (NFCReadFragment) getSupportFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
         if (mNfcReadFragment == null) {
@@ -142,6 +148,7 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
         Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
 
         if (tag != null) {
+            arrow.setAlpha(0.15f);
 
             if (isDialogDisplayed) {
                 myTrace.incrementMetric(READ_FROM_NFC, 1);
@@ -384,5 +391,10 @@ public class TagReaderActivity extends AppCompatActivity implements Listener, St
     protected void onDestroy() {
         super.onDestroy();
         myTrace.stop();
+    }
+
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        arrow.setAlpha(0.15f);
     }
 }

@@ -21,6 +21,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.crashlytics.android.Crashlytics;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.Task;
@@ -48,8 +51,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import io.fabric.sdk.android.Fabric;
 
 // https://github.com/nabinbhandari/Android-Permissions
@@ -115,7 +116,9 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
 
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
-            mBtWrite.setEnabled(mEtName.getText().toString().length() > 0 && TimesheetUtil.isEmailValid(mEtEmail.getText().toString()));
+            mBtWrite.setEnabled(mEtName.getText().toString().length() > 0
+                    && TimesheetUtil.isEmailValid(mEtEmail.getText().toString())
+                    && TimesheetUtil.isEncodable(mEtName.getText().toString()));
         }
 
         @Override
