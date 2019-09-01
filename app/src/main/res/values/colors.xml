@@ -7,10 +7,6 @@
 
     <color name="calendar_divider">#defa93</color>
 
-    <!-- colors taskEntrytask priority selection -->
-   <!-- <color name="materialRed">#E74C3C</color>-->
-   <!-- <color name="materialOrange">#E67E22</color>-->
-
     <color name="snackbar_success">#0c521c</color>
     <color name="snackbar_error">#b00020</color>
 </resources>
