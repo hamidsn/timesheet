@@ -87,7 +87,7 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
 
         //Set values
         holder.employeeName.setText(name);
-        holder.updatedAtView.setText(updatedAt);
+       // holder.updatedAtView.setText(updatedAt);
         holder.layer.setAlpha((float) (availability ? 1.0 : 0.2));
 
         if (!imageUrl.isEmpty()) {
@@ -128,7 +128,7 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
 
         // Class variables for the task description and priority TextViews
         TextView employeeName;
-        TextView updatedAtView;
+       // TextView updatedAtView;
         ImageView employeePic;
         LinearLayout layer;
 
@@ -141,7 +141,7 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
             super(itemView);
 
             employeeName = itemView.findViewById(R.id.employeeName);
-            updatedAtView = itemView.findViewById(R.id.taskUpdatedAt);
+            //updatedAtView = itemView.findViewById(R.id.taskUpdatedAt);
             employeePic = itemView.findViewById(R.id.employeeImage);
             layer = itemView.findViewById(R.id.layer);
             itemView.setOnClickListener(this);

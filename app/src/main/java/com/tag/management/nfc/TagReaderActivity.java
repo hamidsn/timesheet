@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -40,6 +41,7 @@ import com.tag.management.nfc.database.EmployeeEntry;
 import com.tag.management.nfc.engine.AppExecutors;
 import com.tag.management.nfc.model.Employee;
 import com.tag.management.nfc.model.MainViewModel;
+import androidx.core.content.res.ResourcesCompat;
 
 import java.util.Arrays;
 import java.util.List;
@@ -77,6 +79,8 @@ public class TagReaderActivity extends AppCompatActivity implements  DialogInter
     private RecyclerView mRecyclerView;
     private boolean manualMode;
     private ImageView arrow;
+    float low_alpha = 0.1f;
+    float high_alpha = 1.0f;
 
     private AppDatabase employeeListDb;
     private DailyActivityDatabase dailyActivityDb;
@@ -86,7 +90,8 @@ public class TagReaderActivity extends AppCompatActivity implements  DialogInter
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_tag_reader);
-
+         low_alpha = ResourcesCompat.getFloat(this.getResources(), R.dimen.alpha_low);
+        high_alpha = ResourcesCompat.getFloat(this.getResources(), R.dimen.alpha_high);
         initView();
 
         if (savedInstanceState != null && savedInstanceState.containsKey(INSTANCE_TASK_ID)) {
@@ -110,7 +115,7 @@ public class TagReaderActivity extends AppCompatActivity implements  DialogInter
 
     private void initView() {
         mRecyclerView = findViewById(R.id.recyclerViewTasks);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
         mAdapter = new EmployeeAdapter(this, this);
         mRecyclerView.setAdapter(mAdapter);
         DividerItemDecoration decoration = new DividerItemDecoration(getApplicationContext(), VERTICAL);
@@ -122,7 +127,7 @@ public class TagReaderActivity extends AppCompatActivity implements  DialogInter
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> showReadFragment());
         arrow = findViewById(R.id.arrowLeft);
-        arrow.setAlpha(0.15f);
+        arrow.setAlpha(low_alpha);
         setupViewModel();
     }
 
@@ -133,7 +138,7 @@ public class TagReaderActivity extends AppCompatActivity implements  DialogInter
 
     private void showReadFragment() {
         GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_in_out_event), this.getString(R.string.analytics_in_out_event));
-        arrow.setAlpha(1.0f);
+        arrow.setAlpha(high_alpha);
 
         mNfcReadFragment = (NFCReadFragment) getSupportFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
         if (mNfcReadFragment == null) {
@@ -148,7 +153,7 @@ public class TagReaderActivity extends AppCompatActivity implements  DialogInter
         Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
 
         if (tag != null) {
-            arrow.setAlpha(0.15f);
+            arrow.setAlpha(low_alpha);
 
             if (isDialogDisplayed) {
                 myTrace.incrementMetric(READ_FROM_NFC, 1);
@@ -395,6 +400,6 @@ public class TagReaderActivity extends AppCompatActivity implements  DialogInter
 
     @Override
     public void onDismiss(DialogInterface dialog) {
-        arrow.setAlpha(0.15f);
+        arrow.setAlpha(low_alpha);
     }
 }

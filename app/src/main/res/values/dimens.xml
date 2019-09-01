@@ -4,6 +4,13 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="snackbar_margin">40dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
-
+    <dimen name="fab_custom_size">40dp</dimen>
+    <dimen name="fab_max_icon_size">28dp</dimen>
     <dimen name="text_big">22sp</dimen>
+
+    <item format="float" name="alpha_low" type="dimen">0.0</item>
+    <item format="float" name="alpha_high" type="dimen">0.0</item>
+
+    <dimen name="staff_icon_size">50dp</dimen>
+
 </resources>

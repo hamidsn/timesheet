@@ -40,6 +40,11 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
         android:tint="@android:color/white"
+        app:fabSize="auto"
+        android:layout_marginBottom="24dp"
+        app:maxImageSize="@dimen/fab_max_icon_size"
+        app:elevation="6dp"
+        app:fabCustomSize="@dimen/fab_custom_size"
         app:srcCompat="@android:drawable/ic_menu_search" />
 
 </FrameLayout>

@@ -56,6 +56,7 @@ dependencies {
     //noinspection GradleCompatible
     implementation 'androidx.appcompat:appcompat:1.0.0-beta01'
     implementation 'com.google.android.material:material:1.0.0-beta01'
+    implementation 'androidx.core:core:1.2.0-alpha03'
     androidTestImplementation 'junit:junit:4.12'
     implementation 'com.github.yesidlazaro:GmailBackground:1.2.0'
     implementation 'com.nabinbhandari.android:permissions:3.7'
