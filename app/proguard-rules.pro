@@ -15,6 +15,15 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+-keep class com.google.firebase.example.fireeats.model.** { *; }
+-keepattributes *Annotation*
+-keepattributes SourceFile,LineNumberTable
+
+-keepattributes Signature
+-keepclassmembers class com.tag.management.nfc.** {
+  *;
+}
+
 -assumenosideeffects class android.util.Log {
   public static *** v(...);
   public static *** d(...);

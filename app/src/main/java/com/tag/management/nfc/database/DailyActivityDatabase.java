@@ -9,7 +9,7 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
-@Database(entities = {DailyActivityEntry.class}, version = 13, exportSchema = false)
+@Database(entities = {DailyActivityEntry.class}, version = 14, exportSchema = false)
 public abstract class DailyActivityDatabase extends RoomDatabase {
 
     private static final String LOG_TAG = DailyActivityDatabase.class.getSimpleName();

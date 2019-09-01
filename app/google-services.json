@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "953912352015-dkk2mqe8v10h2iochr2kipt7hhkm28ki.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.timesheet.management.nfc",
+            "certificate_hash": "94666425b370e960ad36f49be619e76bdd512979"
+          }
+        },
+        {
           "client_id": "953912352015-clbh6ovalpts3f75l6u7i6fuaqaiakj1.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -33,20 +41,13 @@
         }
       ],
       "services": {
-        "analytics_service": {
-          "status": 1
-        },
         "appinvite_service": {
-          "status": 2,
           "other_platform_oauth_client": [
             {
               "client_id": "953912352015-npa7po85bhnih6qfgre0ok8gl3oe2rnd.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
-        },
-        "ads_service": {
-          "status": 2
         }
       }
     }
