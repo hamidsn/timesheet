@@ -471,7 +471,7 @@ public class TimesheetUtil {
     }
 
     public static boolean isEncodable(String input) {
-        String specialChars = "@/='()-_!?:;,.ßÜÖÄ";
+        String specialChars = " @/='()-_!?:;,.ßÜÖÄ";
         char currentCharacter;
         boolean isEncodable = true;
 

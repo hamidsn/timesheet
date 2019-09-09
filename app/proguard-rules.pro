@@ -15,6 +15,8 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+-dontobfuscate
+
 -keep class com.google.firebase.example.fireeats.model.** { *; }
 -keepattributes *Annotation*
 -keepattributes SourceFile,LineNumberTable
