@@ -14,6 +14,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -34,10 +35,12 @@ public class NFCReadFragment extends DialogFragment {
     private static final String HELLO = "Hello, welcome back";
     private static final String BYE = "Bye, see you soon.";
     private TextView mTvMessage;
+    private Button deleteButton;
     private LottieAnimationView lottieAnimation;
     private Listener fragmentDisplayedListener;
     private StaffListener staffNameListener;
     private AppDatabase employeeListDb;
+    private String staffUId = "";
 
     static NFCReadFragment newInstance() {
 
@@ -57,7 +60,14 @@ public class NFCReadFragment extends DialogFragment {
     private void initViews(View view) {
 
         mTvMessage = view.findViewById(R.id.tv_message);
+        deleteButton = view.findViewById(R.id.delete_tag);
         lottieAnimation = view.findViewById(R.id.lottie_read);
+        deleteButton.setOnClickListener(view1 -> deleteTag());
+    }
+
+    private void deleteTag() {
+        deleteButton.setVisibility(View.INVISIBLE);
+        fragmentDisplayedListener.onDeleteStaff(staffUId);
     }
 
     @Override
@@ -176,8 +186,9 @@ public class NFCReadFragment extends DialogFragment {
     private void readFromNFCManager(Ndef ndef) {
         try {
             String message = getNdefMessage(ndef);
-
+            staffUId = TimesheetUtil.getStaffUniqueId(EncodeMorseManager.getEncodedString(message));
             if (!TextUtils.isEmpty(message)) {
+                deleteButton.setVisibility(View.VISIBLE);
                 Log.d(TAG, "readFromNFCManager: " + message);
                 mTvMessage.setText(TimesheetUtil.parseNFCMessageManager(EncodeMorseManager.getEncodedString(message)));
             } else {

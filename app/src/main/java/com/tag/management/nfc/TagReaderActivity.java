@@ -10,7 +10,6 @@ import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -19,7 +18,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.crashlytics.android.Crashlytics;
@@ -230,6 +228,11 @@ public class TagReaderActivity extends AppCompatActivity implements  DialogInter
     @Override
     public void onDialogDismissed() {
         isDialogDisplayed = false;
+    }
+
+    @Override
+    public void onDeleteStaff(String staffUId) {
+        //do nothing
     }
 
     @Override

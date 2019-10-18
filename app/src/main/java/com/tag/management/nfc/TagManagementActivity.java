@@ -7,15 +7,19 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
+import android.nfc.tech.NdefFormatable;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -45,10 +49,13 @@ import com.tag.management.nfc.engine.DecodeMorseManager;
 import com.tag.management.nfc.model.Employee;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import io.fabric.sdk.android.Fabric;
@@ -82,6 +89,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     public static final String WRITE_2_NFC = "write2nfc";
     //public static final String UTF_8 = "UTF-8";
     private static final int RC_PHOTO_PICKER = 2;
+    List<Map<String, String>> staffKeys = new ArrayList<>();
     private Uri photoURI;
     private EditText mEtName, mEtEmail;
     private ImageView photoPickerImage;
@@ -92,14 +100,13 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     private boolean isDialogDisplayed = false;
     private boolean isWrite = false;
     private Uri downloadUrl = null;
-
     private NfcAdapter mNfcAdapter;
-
+    private Ndef ndef;
     private String employerName;
     //firebase instance variables
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
-
+    private Tag tag;
     private StorageReference mStaffPhotosStorageReference;
 
     private FirebaseDatabase mFirebaseDatabase;
@@ -309,6 +316,35 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     }
 
     @Override
+    public void onDeleteStaff(String staffUId) {
+        String key = extractKey(staffUId);
+        if (!key.isEmpty()) {
+            mMessagesDatabaseReference.child(key).removeValue((firebaseError, firebase) -> {
+                if (firebaseError == null) {
+                    Toast.makeText(this, getString(R.string.removed), Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, getString(R.string.removed_unsuccess), Toast.LENGTH_SHORT).show();
+                }
+            });
+
+        } else {
+            Toast.makeText(this, getString(R.string.cannot_find), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private String extractKey(String staffUId) {
+        Map<String, String> map1;
+        String value = "";
+        for (int j = 0; j < staffKeys.size(); j++) {
+            map1 = staffKeys.get(j);
+            if (!TextUtils.isEmpty(map1.get(staffUId))) {
+                value = map1.get(staffUId);
+            }
+        }
+        return value;
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         mFirebaseAuth.addAuthStateListener(mAuthStateListener);
@@ -359,11 +395,14 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     }
 
     private void attachDatabaseReadListener() {
-        //todo : solve me, always reads DB
         mChildEventListener = new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String s) {
-                // Employee employee = dataSnapshot.getValue(Employee.class);
+                Employee employee = dataSnapshot.getValue(Employee.class);
+                Map<String, String> map1 = new HashMap<>();
+                map1.put(employee != null ? employee.getEmployeeUniqueId() : "", dataSnapshot.getKey() != null ? dataSnapshot.getKey() : "");
+                staffKeys.add(map1);
+
                 if (mNfcWriteFragment != null) {
                     mNfcWriteFragment.dismiss();
                 }
@@ -397,10 +436,11 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
 
     @Override
     protected void onNewIntent(Intent intent) {
-        Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+        tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
 
         if (tag != null) {
             Toast.makeText(this, getString(R.string.message_tag_detected), Toast.LENGTH_SHORT).show();
+            ndef = Ndef.get(tag);
 
             if (isDialogDisplayed) {
 
@@ -428,8 +468,10 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
 
                     myTrace.incrementMetric(READ_FROM_NFC, 1);
                     mNfcReadFragment = (NFCReadFragment) getSupportFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
-                    Ndef ndef = Ndef.get(tag);
-                    mNfcReadFragment.onNfcDetectedManager(ndef);
+
+                    if (mNfcReadFragment != null) {
+                        mNfcReadFragment.onNfcDetectedManager(ndef);
+                    }
                 }
             }
         }

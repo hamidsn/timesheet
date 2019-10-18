@@ -14,7 +14,9 @@
     <string name="write_tag_unable">Tag is not Writable</string>
     <string name="rewrite_tag">Rewriting tag. Older name was</string>
     <string name="manager_tag">staff smart easy</string>
-
+    <string name="cannot_find">Cannot find employee</string>
+    <string name="removed">Employee is removed from database but tag still has information</string>
+    <string name="removed_unsuccess">Unable to remove employee from database</string>
 
     <string name="signed_in">Signed in!</string>
 

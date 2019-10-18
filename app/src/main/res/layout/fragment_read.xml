@@ -33,4 +33,12 @@
         android:layout_marginBottom="@dimen/snackbar_margin"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
+    <Button
+        android:id="@+id/delete_tag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:layout_gravity="center"
+        android:text="Delete"/>
+
 </LinearLayout>

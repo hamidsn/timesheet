@@ -5,4 +5,6 @@ public interface Listener {
     void onDialogDisplayed();
 
     void onDialogDismissed();
+
+    void onDeleteStaff(String staffUId);
 }
