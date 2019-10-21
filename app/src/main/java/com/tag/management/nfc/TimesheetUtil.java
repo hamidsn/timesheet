@@ -406,7 +406,7 @@ public class TimesheetUtil {
     }
 
     @SuppressLint("SimpleDateFormat")
-    static Timestamp convertStringToTimestamp(String str_date, String year) {
+    static Timestamp convertStringToTimestamp(String str_date, String year) throws ParseException {
         java.sql.Timestamp timeStampDate;
         Date date;
         DateFormat formatter;
@@ -415,15 +415,10 @@ public class TimesheetUtil {
             date = formatter.parse(str_date.split("-")[0] + " " + year);
             timeStampDate = new Timestamp(date.getTime());
         } catch (ParseException e) {
+            //when "." is missing is month in FB
             Log.d("ParseException", "Exception :" + e);
-            /*try {
-                date = formatter.parse(str_date.split("-")[0].replace(".", "") + " " + year);
-                timeStampDate = new Timestamp(date.getTime());
-            } catch (ParseException e1) {
-                e1.printStackTrace();
-                timeStampDate = null;
-            }*/
-            timeStampDate = null;
+            date = new SimpleDateFormat(PATTERN_CONVERT, Locale.ENGLISH).parse(str_date.split("-")[0].substring(0, 11)+ ". " + str_date.split("-")[0].substring(12, str_date.split("-")[0].length()) + " " + year);
+            timeStampDate = new Timestamp(date.getTime());
         }
         return timeStampDate;
     }

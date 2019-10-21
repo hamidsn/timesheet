@@ -39,6 +39,7 @@ import com.tag.management.nfc.engine.AppExecutors;
 import com.tag.management.nfc.model.Report;
 
 import java.sql.Timestamp;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -287,7 +288,7 @@ public class ReportActivity extends AppCompatActivity {
                         }
 
                     });
-                } catch (DatabaseException e) {
+                } catch (DatabaseException | ParseException e) {
                     Log.e("report", e.getMessage());
                 }
             }
