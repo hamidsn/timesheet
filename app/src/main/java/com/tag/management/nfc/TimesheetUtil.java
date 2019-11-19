@@ -69,9 +69,15 @@ public class TimesheetUtil {
     private static final String PATTERN_MONTH = "MM";
     private static final String PATTERN_DAY = "dd";
     private static final String PATTERN_YEAR = "yyyy";
-    private static final String DASH_CHAR = "-";
     private static final String EMPLOYER_UID_INFO = "employer_uid_info";
     private static final String PREF_EMPLOYER_UID = "pref_employer_uid";
+    private static final String REGEX = "-";
+    private static final String HASH = "#";
+    private static final String DOLLAR = "$";
+    private static final String OPEN_BRA = "[";
+    private static final String CLOSE_BRA = "]";
+    private static final String SPACE = " ";
+    private static final String DOT = ".";
     public static boolean isDoing = false;
     private static String employerUid = "";
     private static Long totalMinutes = 0L;
@@ -131,7 +137,7 @@ public class TimesheetUtil {
 
     static String getStaffUniqueId(String message) {
         String[] items = message.split(newLine);
-        return items.length > 0 ? items[2] : WRONG_TAG;
+        return items.length > 2 ? items[2] : WRONG_TAG;
     }
 
     private static String getActualTime(String s) {
@@ -175,7 +181,7 @@ public class TimesheetUtil {
 
     public static void applyDailyWorker(Context context) {
 
-        if (!isWorkScheduled(WORKERTAG)) {
+        if (schedulingNewWork(WORKERTAG)) {
 
             PeriodicWorkRequest.Builder periodicWorkRequest =
                     new PeriodicWorkRequest.Builder(
@@ -198,7 +204,7 @@ public class TimesheetUtil {
     }
 
     public static void applyOnceoffWorker() {
-        if (!isWorkScheduled(WORKER_ONCE_TAG)) {
+        if (schedulingNewWork(WORKER_ONCE_TAG)) {
             WorkManager workerInstance = WorkManager.getInstance();
             //run once off workers
             OneTimeWorkRequest midnightWorkRequest =
@@ -219,7 +225,7 @@ public class TimesheetUtil {
         }
     }
 
-    private static boolean isWorkScheduled(String tag) {
+    private static boolean schedulingNewWork(String tag) {
         WorkManager instance = WorkManager.getInstance();
         ListenableFuture<List<WorkInfo>> statuses = instance.getWorkInfosByTag(tag);
         try {
@@ -229,13 +235,10 @@ public class TimesheetUtil {
                 WorkInfo.State state = workInfo.getState();
                 running = (state == WorkInfo.State.RUNNING | state == WorkInfo.State.ENQUEUED) | running;
             }
-            return running;
-        } catch (ExecutionException e) {
+            return !running;
+        } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
-            return false;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            return false;
+            return true;
         }
     }
 
@@ -248,34 +251,6 @@ public class TimesheetUtil {
         c.set(Calendar.MILLISECOND, 0);
         return (c.getTimeInMillis() - System.currentTimeMillis()) / 60000;
     }
-
-/*    public static long getAbsoluteMillisTillMidnight() {
-        Calendar tomorrow = Calendar.getInstance();
-        tomorrow.add(Calendar.DATE, 1);
-        tomorrow.set(Calendar.HOUR_OF_DAY, 0);
-        tomorrow.set(Calendar.MINUTE, 0);
-        tomorrow.set(Calendar.SECOND, 0);
-        tomorrow.set(Calendar.MILLISECOND, 0);
-
-        Calendar today = Calendar.getInstance();
-        today.add(Calendar.DATE, 0);
-        today.set(Calendar.HOUR_OF_DAY, 0);
-        today.set(Calendar.MINUTE, 0);
-        today.set(Calendar.SECOND, 0);
-        today.set(Calendar.MILLISECOND, 0);
-
-        long absoluteMilis;
-
-        if (System.currentTimeMillis() - today.getTimeInMillis() < 3600000) {
-            //after midnight
-            absoluteMilis = System.currentTimeMillis() - today.getTimeInMillis();
-        } else {
-            //before midnight
-            absoluteMilis = tomorrow.getTimeInMillis() - System.currentTimeMillis();
-        }
-
-        return absoluteMilis;
-    }*/
 
     public static String getEmployerUid(Context context) {
         SharedPreferences pref = context.getSharedPreferences(TIMESHEET_PREF, 0);
@@ -290,16 +265,12 @@ public class TimesheetUtil {
         editor.apply();
     }
 
-    /*public static String getMonth(int month) {
-        return new DateFormatSymbols().getMonths()[month - 1];
-    }*/
-
     @NonNull
     public static String validateStringFB(String childName) {
         if (TextUtils.isEmpty(childName)) {
             childName = WRONG_CHILD_NAME_FBDB;
         }
-        return childName.replace(".", DASH_CHAR).replace(" ", DASH_CHAR).replace("#", DASH_CHAR).replace("$", DASH_CHAR).replace("[", DASH_CHAR).replace("]", DASH_CHAR);
+        return childName.replace(DOT, REGEX).replace(SPACE, REGEX).replace(HASH, REGEX).replace(DOLLAR, REGEX).replace(OPEN_BRA, REGEX).replace(CLOSE_BRA, REGEX);
     }
 
     static List<ReportEntry> filterStaffTimetable(List<ReportEntry> staff) {
@@ -307,9 +278,9 @@ public class TimesheetUtil {
 
         for (int i = 0; i < staff.size(); i++) {
 
-            if (!TextUtils.isEmpty(staff.get(i).getEmployeeTimestampIn()) && staff.get(i).getEmployeeTimestampIn().contains("-")) {
-                String[] splittedTimestampIn = staff.get(i).getEmployeeTimestampIn().split("-");
-                String[] splittedTimestampOut = staff.get(i).getEmployeeTimestampOut().split("-");
+            if (!TextUtils.isEmpty(staff.get(i).getEmployeeTimestampIn()) && staff.get(i).getEmployeeTimestampIn().contains(REGEX)) {
+                String[] splittedTimestampIn = staff.get(i).getEmployeeTimestampIn().split(REGEX);
+                String[] splittedTimestampOut = staff.get(i).getEmployeeTimestampOut().split(REGEX);
                 for (int j = 0; j < splittedTimestampIn.length; j++) {
                     staff.add(new ReportEntry(staff.get(i).getEmployeeFullName(), splittedTimestampIn[j], splittedTimestampOut[j], staff.get(i).getEmployeeUniqueId(), staff.get(i).getEmployerName(), staff.get(i).getId()));
                 }
@@ -320,7 +291,7 @@ public class TimesheetUtil {
         /////
 
         for (ReportEntry person : staff) {
-            if (!person.getEmployeeTimestampIn().contains("-")) {
+            if (!person.getEmployeeTimestampIn().contains(REGEX)) {
                 mFinalList.add(person);
             }
         }
@@ -391,7 +362,7 @@ public class TimesheetUtil {
 
     //this is used to create report
     @SuppressLint("SimpleDateFormat")
-    static Timestamp convertStringToTimestamp(String str_date) {
+    private static Timestamp convertStringToTimestamp(String str_date) {
         java.sql.Timestamp timeStampDate;
         try {
             DateFormat formatter;
@@ -412,12 +383,13 @@ public class TimesheetUtil {
         DateFormat formatter;
         formatter = new SimpleDateFormat(PATTERN_CONVERT, Locale.ENGLISH);
         try {
-            date = formatter.parse(str_date.split("-")[0] + " " + year);
+            date = formatter.parse(str_date.split(REGEX)[0] + SPACE + year);
             timeStampDate = new Timestamp(date.getTime());
         } catch (ParseException e) {
             //when "." is missing is month in FB
             Log.d("ParseException", "Exception :" + e);
-            date = new SimpleDateFormat(PATTERN_CONVERT, Locale.ENGLISH).parse(str_date.split("-")[0].substring(0, 11)+ ". " + str_date.split("-")[0].substring(12, str_date.split("-")[0].length()) + " " + year);
+            //date = new SimpleDateFormat(PATTERN_CONVERT, Locale.ENGLISH).parse(str_date.split(REGEX)[0].substring(0, 11)+ ". " + str_date.split(REGEX)[0].substring(12, str_date.split(REGEX)[0].length()) + SPACE + year);
+            date = new SimpleDateFormat(PATTERN_CONVERT, Locale.ENGLISH).parse(String.format("%s. %s%s%s", str_date.split(REGEX)[0].substring(0, 11), str_date.split(REGEX)[0].substring(12), SPACE, year));
             timeStampDate = new Timestamp(date.getTime());
         }
         return timeStampDate;
@@ -465,7 +437,7 @@ public class TimesheetUtil {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    public static boolean isEncodable(String input) {
+    static boolean isEncodable(String input) {
         String specialChars = " @/='()-_!?:;,.ßÜÖÄ";
         char currentCharacter;
         boolean isEncodable = true;
