@@ -69,7 +69,7 @@
     td, th {
       border: 1px solid #dddddd;
       text-align: center;
-      padding: 8px;
+      padding: 9px;
     }
 
     tr:nth-child(even) {
@@ -79,7 +79,10 @@
     </head>
     <body>
 
-    <h2>Report - from $start to $end</h2>]]>
+<table>
+    <caption><h1>Report <br>From $start to $end<br>$business</h1></caption>
+ </table>]]>
+
 </string>
 
     <string name="template2"><![CDATA[<table>
@@ -106,7 +109,7 @@
 
     <string name="template4"><![CDATA[
     </table>
-    <p >-total: $totalHours</p>
+    <p ><caption> - Total: $totalHours</h></caption>
     <br>
     <br>
 

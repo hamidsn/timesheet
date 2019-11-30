@@ -298,16 +298,15 @@ public class TimesheetUtil {
         return mFinalList;
     }
 
-    static void createHTML(Context context, List<ReportEntry> mFinalList, String employerUid, String startDate, String endDate) {
+    static void createHTML(Context context, List<ReportEntry> mFinalList, String employerUid, String startDate, String endDate, String business) {
         StringBuilder htmlDocument = new StringBuilder();
-        htmlDocument.append(context.getString(R.string.template1).replace("$start", startDate).replace("$end", endDate));
-
+        htmlDocument.append(context.getString(R.string.template1).replace("$start", startDate).replace("$end", endDate).replace("$business", business));
 
         //Clean duplicated names() those with - in timing
         ArrayList<String> withoutDuplicatedNames = new ArrayList<>();
         for (ReportEntry element : mFinalList) {
-            if (!withoutDuplicatedNames.contains(element.getEmployeeFullName())) {
-                withoutDuplicatedNames.add(element.getEmployeeFullName());
+            if (!withoutDuplicatedNames.contains(element.getEmployeeFullName().toUpperCase())) {
+                withoutDuplicatedNames.add(element.getEmployeeFullName().toUpperCase());
             }
         }
 
@@ -317,7 +316,7 @@ public class TimesheetUtil {
 
             StringBuilder htmlDocumentBuilder = new StringBuilder(htmlDocument.toString());
             for (int j = 0; j < mFinalList.size(); j++) {
-                if (mFinalList.get(j).getEmployeeFullName().equals(withoutDuplicatedNames.get(i))) {
+                if (mFinalList.get(j).getEmployeeFullName().equalsIgnoreCase(withoutDuplicatedNames.get(i))) {
                     String timestampIn = mFinalList.get(j).getEmployeeTimestampIn();
                     String timestampOut = mFinalList.get(j).getEmployeeTimestampOut();
                     htmlDocumentBuilder.append(context.getString(R.string.template3).

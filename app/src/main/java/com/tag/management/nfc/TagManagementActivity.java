@@ -457,7 +457,6 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
                     myTrace.incrementMetric(WRITE_2_NFC, 1);
                     mNfcWriteFragment = (NFCWriteFragment) getSupportFragmentManager().findFragmentByTag(NFCWriteFragment.TAG);
 
-
                     if (mNfcWriteFragment != null && mNfcWriteFragment.onNfcDetected(tag, ndefMessage, emailAddress, messageToWrite, employerName)) {
                         // write was successful, add employee to fb DB
                         Employee employee = new Employee(employerName, messageToWrite, employerUid, (Uri.EMPTY.equals(downloadUrl) || downloadUrl == null) ? "-" : downloadUrl.toString(), emailAddress, employeeTimeStamp);

@@ -360,7 +360,7 @@ public class ReportActivity extends AppCompatActivity {
                 showSnackMessage(this, "No entry found in cloud. Try other dates", true, R.color.snackbar_error);
 
             } else {
-                TimesheetUtil.createHTML(this, mFinalList, employerUid, startDate, endDate);
+                TimesheetUtil.createHTML(this, mFinalList, employerUid, startDate, endDate, employerName);
                 GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_html_report_event), "htnl created for: " + employerUid);
 
                 showSnackMessage(this, "Creating report in the cloud", false, R.color.snackbar_success);
