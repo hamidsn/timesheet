@@ -7,19 +7,16 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
-import android.nfc.tech.NdefFormatable;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -49,7 +46,6 @@ import com.tag.management.nfc.engine.DecodeMorseManager;
 import com.tag.management.nfc.model.Employee;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -101,12 +97,10 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     private boolean isWrite = false;
     private Uri downloadUrl = null;
     private NfcAdapter mNfcAdapter;
-    private Ndef ndef;
     private String employerName;
     //firebase instance variables
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
-    private Tag tag;
     private StorageReference mStaffPhotosStorageReference;
 
     private FirebaseDatabase mFirebaseDatabase;
@@ -173,14 +167,12 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
                     photoURI = TimesheetUtil.imageToUri(imageBitmap, getApplicationContext().getContentResolver());
                     storeImageFirebase();
                 }
-
             }
-
         }
     }
 
     private void storeImageFirebase() {
-        StorageReference photoRef = mStaffPhotosStorageReference.child(Objects.requireNonNull(photoURI.getLastPathSegment()));
+        StorageReference photoRef = mStaffPhotosStorageReference.child(Objects.requireNonNull(TimesheetUtil.generateTimeStamp()+ "-" + photoURI.getLastPathSegment()));
         // Upload file to Firebase Storage
         UploadTask uploadTask = photoRef.putFile(photoURI);
         Task<Uri> urlTask = uploadTask.continueWithTask(task -> {
@@ -194,9 +186,6 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
                 downloadUrl = task.getResult();
                 GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_upload_image_event), this.getString(R.string.analytics_upload_image_label));
 
-            } else {
-                // Handle failures
-                // ...
             }
         });
     }
@@ -436,11 +425,11 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
 
     @Override
     protected void onNewIntent(Intent intent) {
-        tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+        Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
 
         if (tag != null) {
             Toast.makeText(this, getString(R.string.message_tag_detected), Toast.LENGTH_SHORT).show();
-            ndef = Ndef.get(tag);
+            Ndef ndef = Ndef.get(tag);
 
             if (isDialogDisplayed) {
 

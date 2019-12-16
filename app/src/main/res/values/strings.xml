@@ -6,7 +6,7 @@
     <string name="message_write_progress">Writing to Tag..</string>
     <string name="message_tag_detected">NFC Tag Detected !</string>
     <string name="message_read_tag">Check current NFC Tag</string>
-    <string name="message_write_tag">Register a NFC Tag</string>
+    <string name="message_write_tag">Register an NFC Tag</string>
     <string name="message_tap_tag">Tap the NFC Tag to your device !</string>
     <string name="hint_message">Employee\'s full name</string>
     <string name="hint_email">Employee\'s email</string>
@@ -27,7 +27,7 @@
     <string name="email_pass">*****</string>
     <string name="email_title">Employee tag registration</string>
 
-    <string name="button_ok">Ok</string>
+    <string name="button_ok">OK</string>
     <string name="button_cancel">Cancel</string>
 
     //// launcher activity
