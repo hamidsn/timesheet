@@ -229,7 +229,7 @@ public class ReportActivity extends AppCompatActivity {
                         endDate = selectedDay + CALENDAR_DIVIDER + selectedMonth + CALENDAR_DIVIDER + selectedYear;
 
                         maxSelectedDays = selectedDays.size();
-                        //ignore 14 daysart added days from beginning and end.
+                        //ignore 14 days that are added before and after
                         if (!yFormat.format(selectedDays.get(14)).equals(yFormat.format(selectedDays.get(maxSelectedDays - 15)))) {
                             showSnackMessage(this, "Sorry, report from two different years are not accepted.", true, R.color.snackbar_error);
                         } else {
@@ -239,7 +239,7 @@ public class ReportActivity extends AppCompatActivity {
                                 selectedMonth = mFormat.format(selectedDays.get(dayCounter));
                                 selectedDay = dFormat.format(selectedDays.get(dayCounter));
 
-                                if (!TextUtils.isEmpty(employerUid) && (firstSelectedYear.equals(selectedYear) && lastSelectedYear.equals(selectedYear))) {
+                                if (!TextUtils.isEmpty(employerUid) /*&& (firstSelectedYear.equals(selectedYear) && lastSelectedYear.equals(selectedYear))*/) {
                                     mMessagesDatabaseReference = mFirebaseDatabase.getReference()
                                             .child(selectedYear)
                                             .child(selectedMonth)
