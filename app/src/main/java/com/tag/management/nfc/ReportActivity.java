@@ -68,6 +68,8 @@ public class ReportActivity extends AppCompatActivity {
     private DatabaseReference mMessagesDatabaseReference;
     private FirebaseDatabase mFirebaseDatabase;
     private String selectedYear = "";
+    private String firstSelectedYear = "";
+    private String lastSelectedYear = "";
     private String selectedMonth = "";
     private String selectedDay = "";
     private String startDate, endDate;
@@ -216,10 +218,12 @@ public class ReportActivity extends AppCompatActivity {
                         @SuppressLint("SimpleDateFormat") SimpleDateFormat mFormat = new SimpleDateFormat("MM", Locale.ENGLISH);
                         @SuppressLint("SimpleDateFormat") SimpleDateFormat dFormat = new SimpleDateFormat("dd", Locale.ENGLISH);
                         selectedYear = yFormat.format(firstSelectedDay);
+                        firstSelectedYear = selectedYear;
                         selectedMonth = mFormat.format(firstSelectedDay);
                         selectedDay = dFormat.format(firstSelectedDay);
                         startDate = selectedDay + CALENDAR_DIVIDER + selectedMonth + CALENDAR_DIVIDER + selectedYear;
                         selectedYear = yFormat.format(lastSelectedDay);
+                        lastSelectedYear = selectedYear;
                         selectedMonth = mFormat.format(lastSelectedDay);
                         selectedDay = dFormat.format(lastSelectedDay);
                         endDate = selectedDay + CALENDAR_DIVIDER + selectedMonth + CALENDAR_DIVIDER + selectedYear;
@@ -229,14 +233,13 @@ public class ReportActivity extends AppCompatActivity {
                         if (!yFormat.format(selectedDays.get(14)).equals(yFormat.format(selectedDays.get(maxSelectedDays - 15)))) {
                             showSnackMessage(this, "Sorry, report from two different years are not accepted.", true, R.color.snackbar_error);
                         } else {
+                            GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_selected_dates_event), "from: " + startDate + " to: " + endDate);
                             for (int dayCounter = 0; dayCounter < maxSelectedDays; dayCounter++) {
                                 selectedYear = yFormat.format(selectedDays.get(dayCounter));
                                 selectedMonth = mFormat.format(selectedDays.get(dayCounter));
                                 selectedDay = dFormat.format(selectedDays.get(dayCounter));
 
-                                GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_selected_dates_event), "from: " + startDate + " to: " + endDate);
-
-                                if (!TextUtils.isEmpty(employerUid)) {
+                                if (!TextUtils.isEmpty(employerUid) && (firstSelectedYear.equals(selectedYear) && lastSelectedYear.equals(selectedYear))) {
                                     mMessagesDatabaseReference = mFirebaseDatabase.getReference()
                                             .child(selectedYear)
                                             .child(selectedMonth)
@@ -268,7 +271,7 @@ public class ReportActivity extends AppCompatActivity {
                     } else {
                         employeeIndividual = new ReportEntry(ERROR, ERROR, ERROR, ERROR, ERROR, 0);
                     }
-                    Timestamp downloadedTime = TimesheetUtil.convertStringToTimestamp(employeeIndividual.getEmployeeTimestampIn(), selectedYear);
+                    Timestamp downloadedTime = TimesheetUtil.convertStringToTimestamp(employeeIndividual.getEmployeeTimestampIn(), firstSelectedYear);
 
                     // check if employee is not in DB then add it
                     AppExecutors.getInstance().diskIO().execute(() -> {

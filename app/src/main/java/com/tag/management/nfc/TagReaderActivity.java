@@ -159,7 +159,7 @@ public class TagReaderActivity extends AppCompatActivity implements  DialogInter
                 Ndef ndef = Ndef.get(tag);
 
                 String tagEmployer = mNfcReadFragment.returnEmployerName(ndef);
-                //todo create a proper email and name
+                //register a tag by smartstaffeasy@gmail.com
                 if (this.getString(R.string.manager_tag).equals(tagEmployer.toLowerCase())) {
                     //manager wants to make change
                     mRecyclerView.setBackgroundColor(R.color.colorAccent);
