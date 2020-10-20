@@ -58,12 +58,13 @@
     //// html report
     <string name="template1"><![CDATA[<!DOCTYPE html>
     <html>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <head>
     <style>
     table {
       font-family: arial, sans-serif;
       border-collapse: collapse;
-      width: 90%;
+      width: 95%;
     }
 
     td, th {
@@ -72,20 +73,55 @@
       padding: 9px;
     }
 
+table.center {
+  margin-left:auto;
+  margin-right:auto;
+}
+
+caption {
+  background-color: #0c521c;
+  color: #fdfefb;
+  padding: 4px;
+  font-weight: bold;
+}
+
+headings {
+  color: #0c521c;
+  text-align: center;
+  font-weight: bold;
+}
+
     tr:nth-child(even) {
-      background-color: #cccccc;
+      background-color: #eee;
+    }
+    tr:hover {background-color: #ccc;}
+
+    .button {
+  background-color: #455731;
+  border: none;
+  color: #defa93;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  width: 50%;
+  gravity: center
+  margin: 4px 2px;
+  cursor: pointer;
     }
     </style>
     </head>
     <body>
 
-<table>
-    <caption><h1>Report <br>From $start to $end<br>$business</h1></caption>
+<table class="center">
+    <headings><h2>Report <br>From $start to $end<br>$business</h2></headings>
+    <br>
  </table>]]>
 
 </string>
 
-    <string name="template2"><![CDATA[<table>
+    <string name="template2"><![CDATA[<table class="center">
     <caption>$name</caption>
 
     <tr>
@@ -109,7 +145,7 @@
 
     <string name="template4"><![CDATA[
     </table>
-    <p ><caption> - Total: $totalHours</h></caption>
+    <p><b> - Total: $totalHours</b> </p>
     <br>
     <br>
 
@@ -117,6 +153,9 @@
 </string>
 
     <string name="template5"><![CDATA[
+
+    <button class="button" onclick="window.print()">Print or save PDF</button>
+
     </body>
     </html>
     ]]>
