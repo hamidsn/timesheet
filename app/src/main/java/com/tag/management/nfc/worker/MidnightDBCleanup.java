@@ -73,6 +73,7 @@ public class MidnightDBCleanup extends Worker {
                     .child(employerUid);
 
             // midnight DB clean up
+            Log.d("worker:", " fBDbYear:" + fBDbYear + " fBDbMonth:" + fBDbMonth + " fBDbDay:" + fBDbDay +" employerUid:" + employerUid );
             Log.d("worker:", " DB cleaning worker is running");
 
                 dailyActivityDb = DailyActivityDatabase.getInstance(getApplicationContext());
@@ -81,9 +82,9 @@ public class MidnightDBCleanup extends Worker {
 
                 List<DailyActivityEntry> staff = dailyActivityDb.dailyActivityDao().loadAllEmployees();
 
-                GAPAnalytics.sendEventGA("MidnightDBCleanup", "midnight cleanup", "DB read success: " + employerUid);
+                GAPAnalytics.sendEventGA("MidnightDBCleanup", "midnight cleanup-"+ employerUid, "DB read success: - employees: " + staff.size() );
 
-                Log.d("worker:", " DB uploading to firebase");
+                Log.d("worker:", " DB uploading to firebase - number of employees: "+ staff.size());
                 uploadStaffFB(staff);
                 TimesheetUtil.isDoing = false;
                 return Result.success();

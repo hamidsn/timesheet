@@ -10,18 +10,12 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
-
-import com.crashlytics.android.Crashlytics;
-import com.firebase.ui.auth.AuthUI;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
+
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -47,7 +41,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import io.fabric.sdk.android.Fabric;
+import static com.tag.management.nfc.TimesheetUtil.user_id;
+import static com.tag.management.nfc.TimesheetUtil.user_name;
 
 public class ReportActivity extends AppCompatActivity {
 
@@ -60,9 +55,7 @@ public class ReportActivity extends AppCompatActivity {
     int staffNumber = 0;
     int downloadedDay = 0;
     int maxSelectedDays = 0;
-    private FirebaseAuth mFirebaseAuth;
     private ChildEventListener mChildEventListener;
-    private FirebaseAuth.AuthStateListener mAuthStateListener;
     private Trace myTrace;
     private String employerUid, employerName;
     private DatabaseReference mMessagesDatabaseReference;
@@ -82,87 +75,30 @@ public class ReportActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //handler = new Handler();
-        Fabric.with(this, new Crashlytics());
+
         setContentView(R.layout.activity_report);
+
         initView();
         initFirebase();
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == RC_SIGN_IN) {
-            if (resultCode == RESULT_OK) {
-                // Sign-in succeeded, set up the UI
-                GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_loggedin_event), this.getString(R.string.analytics_loggedin_label));
-                Toast.makeText(this, getResources().getString(R.string.signed_in), Toast.LENGTH_SHORT).show();
-            }
-        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         hideSpinner();
-        mFirebaseAuth.addAuthStateListener(mAuthStateListener);
     }
-
-    @Override
-    protected void onPause() {
-        if (mAuthStateListener != null) {
-            mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
-        }
-        super.onPause();
-    }
-
-    private void onSignedInInitialize(String username, String uid) {
-        employerName = username;
-        employerUid = uid;
-
-    }
-
-    private void onSignedOutCleanup() {
-        employerName = ANONYMOUS;
-        employerUid = ANONYMOUS;
-        detachDatabaseReadListener();
-    }
-
 
     private void initFirebase() {
-        mFirebaseAuth = FirebaseAuth.getInstance();
 
-        //todo: are we used?
-        employerName = ANONYMOUS;
-        employerUid = ANONYMOUS;
+        employerName = getIntent().getStringExtra(user_name);
+        employerUid = getIntent().getStringExtra(user_id);
         String STARTUP_TRACE_NAME = "nfc_launcher_trace";
         myTrace = FirebasePerformance.getInstance().newTrace(STARTUP_TRACE_NAME);
         myTrace.start();
-        Fabric.with(this, new Crashlytics());
 
         mFirebaseDatabase = FirebaseDatabase.getInstance();
 
-        mAuthStateListener = firebaseAuth -> {
-            List<AuthUI.IdpConfig> providers = Arrays.asList(
-                    new AuthUI.IdpConfig.EmailBuilder().build(),
-                    new AuthUI.IdpConfig.GoogleBuilder().build());
 
-            FirebaseUser user = firebaseAuth.getCurrentUser();
-            if (user != null) {
-                // User is signed in
-                onSignedInInitialize(user.getDisplayName(), user.getUid());
-
-            } else {
-                // User is signed out
-                onSignedOutCleanup();
-                startActivityForResult(
-                        AuthUI.getInstance()
-                                .createSignInIntentBuilder()
-                                .setIsSmartLockEnabled(false)
-                                .setAvailableProviders(providers)
-                                .build(),
-                        RC_SIGN_IN);
-            }
-        };
     }
 
     private void initView() {
@@ -382,6 +318,7 @@ public class ReportActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        detachDatabaseReadListener();
         myTrace.stop();
     }
 

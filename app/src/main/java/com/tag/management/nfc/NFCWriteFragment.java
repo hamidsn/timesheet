@@ -6,7 +6,6 @@ import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.nfc.tech.NdefFormatable;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,28 +19,20 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
 import com.airbnb.lottie.LottieAnimationView;
-import com.creativityapps.gmailbackgroundlibrary.BackgroundMail;
 import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 import com.tag.management.nfc.engine.EncodeMorseManager;
 
-import java.util.HashMap;
-import java.util.Map;
 
 public class NFCWriteFragment extends DialogFragment {
 
     static final String TAG = NFCWriteFragment.class.getSimpleName();
-    private static final String SEND_EMAIL = "send_email";
-    //public static final String UTF_8 = "UTF-8";
+
     private static final String EMAIL_FAILED = "Email failed";
     private static final String EMAIL_SENT = "Email sent";
     private TextView mTvMessage;
     private LottieAnimationView lottieAnimation;
     private ProgressBar mProgress;
     private Listener mListener;
-    private boolean send_email = false;
-    private FirebaseRemoteConfig mFirebaseRemoteConfig;
 
     static NFCWriteFragment newInstance() {
 
@@ -53,24 +44,8 @@ public class NFCWriteFragment extends DialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_write, container, false);
         initViews(view);
-        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
 
         GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_write_tag_event), "NFCWriteFragment shown");
-
-        // Create Remote Config Setting to enable developer mode.
-        // Fetching configs from the server is normally limited to 5 requests per hour.
-        // Enabling developer mode allows many more requests to be made per hour, so developers
-        // can test different config values during development.
-        FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
-                .setMinimumFetchIntervalInSeconds(3600)
-                .build();
-        mFirebaseRemoteConfig.setConfigSettingsAsync(configSettings);
-        // Define default config values. Defaults are used when fetched config values are not
-        // available. Eg: if an error occurred fetching values from the server.
-        Map<String, Object> defaultConfigMap = new HashMap<>();
-        defaultConfigMap.put(SEND_EMAIL, send_email);
-        mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
-        fetchConfig();
 
         return view;
     }
@@ -138,9 +113,7 @@ public class NFCWriteFragment extends DialogFragment {
                 ndef.close();
                 mTvMessage.setText(getString(R.string.message_write_success));
                 lottieAnimation.cancelAnimation();
-                if (send_email) {
-                    sendEmail(emailAddress, messageToWrite + " " + employerName);
-                }
+
                 return true;
             }
 
@@ -154,28 +127,6 @@ public class NFCWriteFragment extends DialogFragment {
         }
         mProgress.setVisibility(View.GONE);
         return false;
-    }
-
-    private void sendEmail(String emailAddress, String body) {
-
-        if (TextUtils.isEmpty(body)) {
-            Toast.makeText(getActivity(), getResources().getString(R.string.empty_tag), Toast.LENGTH_SHORT).show();
-        } else {
-            if (this.getContext() != null) {
-                BackgroundMail.newBuilder(this.getContext())
-                        .withUsername(getResources().getString(R.string.email_address))
-                        .withPassword(getResources().getString(R.string.email_pass))
-                        .withMailto(emailAddress)
-                        .withType(BackgroundMail.TYPE_PLAIN)
-                        .withSubject(getResources().getString(R.string.email_title))
-                        //todo: create a good message
-                        .withBody(body).withProcessVisibility(false)
-                        .withOnSuccessCallback(() -> Toast.makeText(getActivity(), EMAIL_SENT, Toast.LENGTH_LONG).show())
-                        .withOnFailCallback(() -> Toast.makeText(getActivity(), EMAIL_FAILED, Toast.LENGTH_LONG).show())
-                        .send();
-            }
-
-        }
     }
 
     private void formatTag(Tag tag, NdefMessage ndefMessage) {
@@ -198,30 +149,4 @@ public class NFCWriteFragment extends DialogFragment {
         }
     }
 
-    // Fetch the config to determine the allowed send_email.
-    private void fetchConfig() {
-        long cacheExpiration = 3600; // 1 hour in seconds
-        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
-            cacheExpiration = 0;
-        }
-        mFirebaseRemoteConfig.fetch(cacheExpiration)
-                .addOnSuccessListener(aVoid -> {
-                    mFirebaseRemoteConfig.activateFetched();
-                    applyRetrievedLengthLimit();
-                })
-                .addOnFailureListener(e -> {
-                    // An error occurred when fetching the config.
-                    Log.w(TAG, "Error fetching config", e);
-                    applyRetrievedLengthLimit();
-                });
-    }
-
-    /**
-     * Apply retrieved sending email. This result may be fresh from the server or it may be from
-     * cached values.
-     */
-    private void applyRetrievedLengthLimit() {
-        send_email = mFirebaseRemoteConfig.getBoolean(SEND_EMAIL);
-        Log.d(TAG, SEND_EMAIL + " = " + String.valueOf(send_email));
-    }
 }

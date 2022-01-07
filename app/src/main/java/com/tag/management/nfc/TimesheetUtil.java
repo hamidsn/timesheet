@@ -53,8 +53,11 @@ import java.util.regex.Pattern;
 
 public class TimesheetUtil {
     private static final String WORKERTAG = "HAMID";
+     static final String user_name = "username";
+     static final String user_id = "userid";
     private static final String WORKER_ONCE_TAG = "HAMIDONCE";
     private static final String EMPTY_EMPLOYER_UID = "EMPTY_EMPLOYER_UID";
+    private static final String EMPTY_EMPLOYER_USERNAME = "EMPTY_EMPLOYER_USERNAME";
     private static final String TIMESHEET_PREF = "TimesheetPref";
     private static final String WRONG_CHILD_NAME_FBDB = "WRONG_CHILD_NAME_FBDB";
     private static final String PATTERN_REGISTRATION = "MM/dd/yyyy";
@@ -71,6 +74,7 @@ public class TimesheetUtil {
     private static final String PATTERN_YEAR = "yyyy";
     private static final String EMPLOYER_UID_INFO = "employer_uid_info";
     private static final String PREF_EMPLOYER_UID = "pref_employer_uid";
+    private static final String PREF_EMPLOYER_USERNAME = "pref_employer_username";
     private static final String REGEX = "-";
     private static final String HASH = "#";
     private static final String DOLLAR = "$";
@@ -80,6 +84,7 @@ public class TimesheetUtil {
     private static final String DOT = ".";
     public static boolean isDoing = false;
     private static String employerUid = "";
+    private static String employerUserName = "";
     private static Long totalMinutes = 0L;
 
     static boolean isEmailValid(String email) {
@@ -262,6 +267,19 @@ public class TimesheetUtil {
         SharedPreferences pref = context.getSharedPreferences(TIMESHEET_PREF, 0); // 0 - for private mode
         SharedPreferences.Editor editor = pref.edit();
         editor.putString(PREF_EMPLOYER_UID, employerUid);
+        editor.apply();
+    }
+
+    public static String getEmployerName(Context context) {
+        SharedPreferences pref = context.getSharedPreferences(TIMESHEET_PREF, 0);
+        return employerUserName.isEmpty() ? pref.getString(PREF_EMPLOYER_USERNAME, EMPTY_EMPLOYER_USERNAME) : employerUserName;
+    }
+
+    static void setEmployerName(String employerName, Context context) {
+        TimesheetUtil.employerUserName = employerName;
+        SharedPreferences pref = context.getSharedPreferences(TIMESHEET_PREF, 0); // 0 - for private mode
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString(PREF_EMPLOYER_USERNAME, employerName);
         editor.apply();
     }
 

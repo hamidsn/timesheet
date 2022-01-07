@@ -10,12 +10,11 @@ import androidx.annotation.NonNull;
 public class GAPAnalytics {
     private static FirebaseAnalytics mFirebaseAnalytics;
 
-    static FirebaseAnalytics instance(Context context, String uid) {
+    static void instance(Context context, String uid) {
         if (mFirebaseAnalytics == null) {
             mFirebaseAnalytics = FirebaseAnalytics.getInstance(context);
             mFirebaseAnalytics.setUserProperty("user_id", uid.isEmpty() ? "empty_uid" : uid);
         }
-        return mFirebaseAnalytics;
     }
 
     public static void sendEventGA(@NonNull String eventCategory, @NonNull String eventAction,
@@ -25,8 +24,7 @@ public class GAPAnalytics {
         params.putString("eventAction", eventAction);
         params.putString("eventLabel", eventLabel);
         if (mFirebaseAnalytics != null) {
-            mFirebaseAnalytics.logEvent("share_image", params);
+            mFirebaseAnalytics.logEvent("timesheet", params);
         }
-
     }
 }

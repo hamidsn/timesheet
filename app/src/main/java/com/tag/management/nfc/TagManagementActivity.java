@@ -25,11 +25,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.crashlytics.android.Crashlytics;
-import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -48,16 +44,13 @@ import com.tag.management.nfc.model.Employee;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import io.fabric.sdk.android.Fabric;
-
-// https://github.com/nabinbhandari/Android-Permissions
-
+import static com.tag.management.nfc.TimesheetUtil.user_id;
+import static com.tag.management.nfc.TimesheetUtil.user_name;
 
 /**
  * {
@@ -99,8 +92,6 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     private NfcAdapter mNfcAdapter;
     private String employerName;
     //firebase instance variables
-    private FirebaseAuth mFirebaseAuth;
-    private FirebaseAuth.AuthStateListener mAuthStateListener;
     private StorageReference mStaffPhotosStorageReference;
 
     private FirebaseDatabase mFirebaseDatabase;
@@ -208,13 +199,11 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     }
 
     private void initFirebase() {
-        Fabric.with(this, new Crashlytics());
-        mFirebaseAuth = FirebaseAuth.getInstance();
         employerName = ANONYMOUS;
         employerUid = ANONYMOUS;
 
         mFirebaseDatabase = FirebaseDatabase.getInstance();
-        mMessagesDatabaseReference = mFirebaseDatabase.getReference().child(EMPLOYEES);
+        onSignedInInitialize(getIntent().getStringExtra(user_name), getIntent().getStringExtra(user_id));
         String STARTUP_TRACE_NAME = "nfc_management_trace";
         myTrace = FirebasePerformance.getInstance().newTrace(STARTUP_TRACE_NAME);
         myTrace.start();
@@ -224,31 +213,7 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
         mStaffPhotosStorageReference = mFirebaseStorage.getReference().child(STAFF_PHOTOS);
 
         myTrace.incrementMetric(INIT_NFC, 1);
-
         myTrace.incrementMetric(AUTHENTICATION, 1);
-        mAuthStateListener = firebaseAuth -> {
-
-            List<AuthUI.IdpConfig> providers = Arrays.asList(
-                    new AuthUI.IdpConfig.EmailBuilder().build(),
-                    new AuthUI.IdpConfig.GoogleBuilder().build());
-
-            FirebaseUser user = firebaseAuth.getCurrentUser();
-            if (user != null) {
-                // User is signed in
-
-                onSignedInInitialize(user.getDisplayName(), user.getUid());
-            } else {
-                // User is signed out
-                onSignedOutCleanup();
-                startActivityForResult(
-                        AuthUI.getInstance()
-                                .createSignInIntentBuilder()
-                                .setIsSmartLockEnabled(false)
-                                .setAvailableProviders(providers)
-                                .build(),
-                        RC_SIGN_IN);
-            }
-        };
     }
 
     private void captureImage() {
@@ -336,7 +301,6 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
     @Override
     protected void onResume() {
         super.onResume();
-        mFirebaseAuth.addAuthStateListener(mAuthStateListener);
 
         IntentFilter tagDetected = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED);
         IntentFilter ndefDetected = new IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED);
@@ -352,9 +316,6 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
 
     @Override
     protected void onPause() {
-        if (mAuthStateListener != null) {
-            mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
-        }
         detachDatabaseReadListener();
 
         super.onPause();
@@ -375,12 +336,6 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
         TimesheetUtil.setEmployerUid(uid, this);
         mMessagesDatabaseReference = mFirebaseDatabase.getReference().child(employerUid);
         attachDatabaseReadListener();
-    }
-
-    private void onSignedOutCleanup() {
-        employerName = ANONYMOUS;
-        employerUid = ANONYMOUS;
-        detachDatabaseReadListener();
     }
 
     private void attachDatabaseReadListener() {
@@ -463,6 +418,8 @@ public class TagManagementActivity extends AppCompatActivity implements Listener
                 }
             }
         }
+        super.onNewIntent(intent);
+
     }
 
     private NdefRecord createTextRecord(String staffName, String employerName, String employeeTimeStamp) {

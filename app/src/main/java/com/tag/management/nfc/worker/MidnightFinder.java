@@ -23,10 +23,11 @@ public class MidnightFinder extends Worker {
     @Override
     public Result doWork() {
         // midnight DB clean up
-        GAPAnalytics.sendEventGA("MidnightFinder", "MidnightFinder error", "midnight finder worker is running");
+        GAPAnalytics.sendEventGA("MidnightFinder", "MidnightFinder", "midnight finder worker is running");
 
         try {
             TimesheetUtil.applyDailyWorker(this.mContext);
+            GAPAnalytics.sendEventGA("MidnightFinder", "Midnight is found", "midnight finder worker was successful");
 
             return Result.success();
         } catch (Exception e) {

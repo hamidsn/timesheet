@@ -26,21 +26,7 @@ public abstract class DailyActivityDatabase extends RoomDatabase {
                         .fallbackToDestructiveMigration()
                         .build();
             }
-            //TimesheetUtil.applyDailyWorker(context);
             TimesheetUtil.applyOnceoffWorker();
-            /*WorkManager workerInstance = WorkManager.getInstance();
-            //run once off workers
-            OneTimeWorkRequest midnightWorkRequest =
-                    new OneTimeWorkRequest.Builder(MidnightFinder.class)
-                            .setInitialDelay(TimesheetUtil.getMinutesTillMidnight(), TimeUnit.MINUTES)
-                            //.setInitialDelay(17L, TimeUnit.MINUTES)
-                            .build();
-            Log.d("worker", "running midnight finder with " + TimesheetUtil.getMinutesTillMidnight() + " Minutes");
-            try {
-                workerInstance.enqueueUniqueWork("HAMID", ExistingWorkPolicy.REPLACE, midnightWorkRequest);
-            } catch (Exception e) {
-                Log.d("worker", "error" + e.getMessage());
-            }*/
         }
 
         Log.d(LOG_TAG, "Getting the database instance");

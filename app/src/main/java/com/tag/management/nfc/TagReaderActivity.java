@@ -15,16 +15,13 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.crashlytics.android.Crashlytics;
-import com.firebase.ui.auth.AuthUI;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -44,9 +41,10 @@ import androidx.core.content.res.ResourcesCompat;
 import java.util.Arrays;
 import java.util.List;
 
-import io.fabric.sdk.android.Fabric;
 
 import static androidx.recyclerview.widget.DividerItemDecoration.VERTICAL;
+import static com.tag.management.nfc.TimesheetUtil.user_id;
+import static com.tag.management.nfc.TimesheetUtil.user_name;
 
 public class TagReaderActivity extends AppCompatActivity implements  DialogInterface.OnDismissListener, Listener, StaffListener, EmployeeAdapter.ItemClickListener {
 
@@ -61,8 +59,6 @@ public class TagReaderActivity extends AppCompatActivity implements  DialogInter
     private static final String READ_STAFF_FROM_FB = "readStaffFromFb";
     private final String ERROR = "bad_data";
     //firebase instance variables
-    private FirebaseAuth mFirebaseAuth;
-    private FirebaseAuth.AuthStateListener mAuthStateListener;
     private Trace myTrace;
     private String employerUid, employerName;
     private NFCReadFragment mNfcReadFragment;
@@ -130,7 +126,9 @@ public class TagReaderActivity extends AppCompatActivity implements  DialogInter
     }
 
     private void setupViewModel() {
-        MainViewModel viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+//        MainViewModel viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+        MainViewModel viewModel =  new ViewModelProvider.AndroidViewModelFactory(getApplication()).create(MainViewModel.class);
+
         viewModel.getEmployees().observe(this, employeeEntries -> mAdapter.setTasks(employeeEntries));
     }
 
@@ -148,6 +146,7 @@ public class TagReaderActivity extends AppCompatActivity implements  DialogInter
     @SuppressLint("ResourceAsColor")
     @Override
     protected void onNewIntent(Intent intent) {
+
         Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
 
         if (tag != null) {
@@ -178,46 +177,18 @@ public class TagReaderActivity extends AppCompatActivity implements  DialogInter
                 }
             }
         }
+        super.onNewIntent(intent);
     }
 
     private void initFirebase() {
-        Fabric.with(this, new Crashlytics());
-        mFirebaseAuth = FirebaseAuth.getInstance();
 
-        //todo: are we used?
-        employerName = ANONYMOUS;
-        employerUid = ANONYMOUS;
         String STARTUP_TRACE_NAME = "nfc_launcher_trace";
         myTrace = FirebasePerformance.getInstance().newTrace(STARTUP_TRACE_NAME);
         myTrace.start();
-        Fabric.with(this, new Crashlytics());
-
         mFirebaseDatabase = FirebaseDatabase.getInstance();
+        onSignedInInitialize(getIntent().getStringExtra(user_name), getIntent().getStringExtra(user_id));
+
         mMessagesDatabaseReference = mFirebaseDatabase.getReference().child(EMPLOYEES);
-
-        mAuthStateListener = firebaseAuth -> {
-
-            List<AuthUI.IdpConfig> providers = Arrays.asList(
-                    new AuthUI.IdpConfig.EmailBuilder().build(),
-                    new AuthUI.IdpConfig.GoogleBuilder().build());
-
-            FirebaseUser user = firebaseAuth.getCurrentUser();
-            if (user != null) {
-                // User is signed in
-                onSignedInInitialize(user.getDisplayName(), user.getUid());
-                appEmployer = user.getDisplayName();
-            } else {
-                // User is signed out
-                onSignedOutCleanup();
-                startActivityForResult(
-                        AuthUI.getInstance()
-                                .createSignInIntentBuilder()
-                                .setIsSmartLockEnabled(false)
-                                .setAvailableProviders(providers)
-                                .build(),
-                        RC_SIGN_IN);
-            }
-        };
     }
 
     @Override
@@ -235,22 +206,10 @@ public class TagReaderActivity extends AppCompatActivity implements  DialogInter
         //do nothing
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == RC_SIGN_IN) {
-            if (resultCode == RESULT_OK) {
-                // Sign-in succeeded, set up the UI
-                Toast.makeText(this, getResources().getString(R.string.signed_in), Toast.LENGTH_SHORT).show();
-                GAPAnalytics.sendEventGA(this.getClass().getSimpleName(), this.getString(R.string.analytics_loggedin_event), this.getString(R.string.analytics_loggedin_label));
-            }
-        }
-    }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mFirebaseAuth.addAuthStateListener(mAuthStateListener);
         IntentFilter tagDetected = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED);
         IntentFilter ndefDetected = new IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED);
         IntentFilter techDetected = new IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED);
@@ -264,29 +223,27 @@ public class TagReaderActivity extends AppCompatActivity implements  DialogInter
 
     @Override
     protected void onPause() {
-        if (mAuthStateListener != null) {
-            mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
-        }
         super.onPause();
         if (mNfcAdapter != null) {
             mNfcAdapter.disableForegroundDispatch(this);
         }
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        detachDatabaseReadListener();
+    }
+
     private void onSignedInInitialize(String username, String uid) {
         employerName = username;
         employerUid = uid;
+        appEmployer = username;
         TimesheetUtil.setEmployerUid(uid, this);
         mMessagesDatabaseReference = mFirebaseDatabase.getReference().child(employerUid);
         attachDatabaseReadListener();
     }
 
-    private void onSignedOutCleanup() {
-        employerName = ANONYMOUS;
-        employerUid = ANONYMOUS;
-        //todo clear db
-        detachDatabaseReadListener();
-    }
 
     private void attachDatabaseReadListener() {
         myTrace.incrementMetric(READ_STAFF_FROM_FB, 1);

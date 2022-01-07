@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "953912352015-clbh6ovalpts3f75l6u7i6fuaqaiakj1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.timesheet.management.nfc",
+            "certificate_hash": "82702942dc3bfd6e9e19935c4ea033d034a9c223"
+          }
+        },
+        {
           "client_id": "953912352015-dkk2mqe8v10h2iochr2kipt7hhkm28ki.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -23,11 +31,11 @@
           }
         },
         {
-          "client_id": "953912352015-clbh6ovalpts3f75l6u7i6fuaqaiakj1.apps.googleusercontent.com",
+          "client_id": "953912352015-f1lumeio4nik9hh6ehdsefs523klvk2c.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.timesheet.management.nfc",
-            "certificate_hash": "82702942dc3bfd6e9e19935c4ea033d034a9c223"
+            "certificate_hash": "6f46aa86c87ef99e292b11b167670b8c051f833a"
           }
         },
         {
